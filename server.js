@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const path = require('path');
-const User = require('models/User');
+const User = require('./models/User');
 
 const app = express();
 
@@ -23,9 +23,9 @@ if (!MONGO_URI) {
 
 // --- ROUTES ---
 
-// 1. Make REGISTER the default first page
+// 1. Make LOGIN the default first page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'register.html'));
+    res.sendFile(path.join(__dirname, 'login.html')); 
 });
 
 app.get('/login', (req, res) => {
