@@ -87,3 +87,107 @@ button {
 button:hover {
     background-color: #5e00b3;
 }
+
+/* --- DASHBOARD STYLES --- */
+
+.dashboard-body {
+    background-color: #333333; /* Dark Grey Background */
+    display: block; /* Overrides the flex centering from the login page */
+    height: 100vh;
+    color: white;
+}
+
+/* The Top Bar */
+.navbar {
+    background-color: black;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #555;
+}
+
+.logo {
+    color: #ff0000; /* Bright Red */
+    font-size: 1.5rem;
+    font-weight: normal; /* As per your image */
+}
+
+.user-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.user-badge {
+    background-color: #8b0000; /* Dark Red background */
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-style: italic;
+    font-weight: bold;
+    border: 1px solid #ff4444;
+}
+
+.logout-btn {
+    background-color: #f0f0f0;
+    color: black;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 0; /* Override previous button styles */
+}
+
+.logout-btn:hover {
+    background-color: #ddd;
+}
+
+/* Main Area with the 3 Big Buttons */
+.game-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    height: 70vh; /* Takes up most of the screen */
+}
+
+.card {
+    background-color: #8b0000; /* Dark Red */
+    width: 200px;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    transition: transform 0.2s, background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 80px;
+}
+
+.card:hover {
+    transform: scale(1.05); /* Slightly grows on hover */
+    background-color: #a30000; /* Lighter red on hover */
+}
+
+.card h2 {
+    color: white;
+    font-size: 1.4rem;
+    margin: 0;
+    font-weight: normal;
+}
+
+/* Footer */
+.footer {
+    background-color: black;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    font-size: 0.9rem;
+}

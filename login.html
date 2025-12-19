@@ -25,3 +25,30 @@
 
 </body>
 </html>
+
+<script>
+    const form = document.querySelector('form');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Stop the form from refreshing the page
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Save username so the dashboard can see it
+            localStorage.setItem('username', result.username);
+            // Go to dashboard
+            window.location.href = '/dashboard';
+        } else {
+            alert(result.message); // Show error (e.g. "Wrong password")
+        }
+    });
+</script>
