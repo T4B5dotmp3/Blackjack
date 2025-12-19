@@ -1,32 +1,31 @@
-require('dotenv').config(); // Load environment variables
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const path = require('path');
-const User = require('/models/User'); // Import the User model
+const User = require('/models/User');
 
 const app = express();
 
-// --- MIDDLEWARE ---
-// Allows the server to understand data sent from forms
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-// Serves your HTML, CSS, and Image files from the current folder
 app.use(express.static(__dirname));
 
-// --- MONGODB CONNECTION ---
-const MONGO_URI = process.env.MONGO_URI; 
+const MONGO_URI = process.env.MONGO_URI;
 
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('MongoDB Connected Successfully'))
-    .catch(err => console.log('MongoDB Connection Error:', err));
+if (!MONGO_URI) {
+    console.warn('Warning: MONGO_URI is not set. Skipping MongoDB connection. Set MONGO_URI in a .env file to enable persistence.');
+} else {
+    mongoose.connect(MONGO_URI)
+        .then(() => console.log('MongoDB Connected'))
+        .catch(err => console.error('MongoDB connection error:', err));
+}
 
 // --- ROUTES ---
 
-// 1. Serve HTML Pages
+// 1. Make REGISTER the default first page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
+    res.sendFile(path.join(__dirname, 'register.html'));
 });
 
 app.get('/login', (req, res) => {
@@ -41,21 +40,18 @@ app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'dashboard.html'));
 });
 
-// 2. Handle Registration (Sign Up)
+// 2. Handle Registration (Returns JSON now)
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        // Check if user already exists
         const existingUser = await User.findOne({ username });
         if (existingUser) {
-            return res.send("User already exists. <a href='/register'>Try again</a>");
+            return res.status(400).json({ success: false, message: "User already exists" });
         }
 
-        // Hash the password for security
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create new user with default $1000 credits
         const newUser = new User({
             username,
             password: hashedPassword,
@@ -64,38 +60,32 @@ app.post('/register', async (req, res) => {
 
         await newUser.save();
         
-        // Redirect to login page after success
-        res.redirect('/login');
+        // SUCCESS: Send signal to frontend
+        res.json({ success: true, username: username });
         
     } catch (err) {
         console.error(err);
-        res.status(500).send("Error registering user.");
+        res.status(500).json({ success: false, message: "Server error" });
     }
 });
 
-// 3. Handle Login
+// 3. Handle Login (Returns JSON now)
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        // Find user by username
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(400).json({ success: false, message: "User not found" });
         }
 
-        // Check if password matches
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
 
-        // Login Success! Send JSON back to the browser
-        res.json({ 
-            success: true, 
-            username: user.username, 
-            credits: user.credits 
-        });
+        // SUCCESS: Send signal to frontend
+        res.json({ success: true, username: user.username });
 
     } catch (err) {
         console.error(err);
@@ -103,8 +93,5 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// --- START SERVER ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
