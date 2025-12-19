@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
@@ -13,7 +12,7 @@ const UserSchema = new mongoose.Schema({
     },
     credits: { 
         type: Number, 
-        default: 0
+        default: 1000 
     }
 });
 
