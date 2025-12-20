@@ -10,6 +10,7 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.static(__dirname));
 
 // --- MONGODB ---
 const MONGO_URI = process.env.MONGO_URI; 
@@ -44,7 +45,7 @@ app.get('/blackjack', (req, res) => renderPage(res, 'blackjack.html'));
 app.get('/account', (req, res) => renderPage(res, 'account.html')); 
 
 // CSS
-app.get('/style.css', (req, res) => renderPage(res, 'style.css', 'text/css'));
+//app.get('/style.css', (req, res) => renderPage(res, 'style.css', 'text/css'));
 
 // --- LOGIC ROUTES ---
 
