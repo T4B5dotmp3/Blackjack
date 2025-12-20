@@ -23,15 +23,18 @@ if (!MONGO_URI) {
 
 // --- ROUTES ---
 
-// 1. Make LOGIN the default first page
+// 1. Root Route -> LOGIN Page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html')); 
+    console.log("Request received for Root URL (/)"); // This prints to terminal when you visit
+    res.sendFile(path.join(__dirname, 'login.html'));
 });
 
+// Explicit Login Route
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'login.html'));
 });
 
+// Register Route
 app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'register.html'));
 });
