@@ -8,18 +8,22 @@
 <body class="dashboard-body">
 
     <nav class="navbar">
-        <div class="logo">Queen of Hearts Casino</div>
-        <div class="user-controls">
-            <span class="credits-badge">Balance: $<span id="credits-display">0</span></span>
-            
-            <button id="username-btn" class="user-badge" onclick="window.location.href='/account'" style="cursor: pointer; border: none;">
-                Guest
-            </button>
-            
-            <button class="logout-btn" onclick="logout()">Logout</button>
-        </div>
-    </nav>
-
+    <div class="logo">Queen of Hearts Casino</div>
+    
+    <div class="user-controls">
+        <span class="credits-badge">
+            Balance: $<span id="credits-display">0</span>
+        </span>
+        
+        <button id="username-btn" class="user-badge" onclick="window.location.href='/account'">
+            Guest
+        </button>
+        
+        <button class="logout-btn" onclick="logout()">
+            Logout
+        </button>
+    </div>
+</nav>
     <div class="game-container">
         <div class="card" onclick="window.location.href='/buy-credits'">
             <h2>Buy Credits!</h2>

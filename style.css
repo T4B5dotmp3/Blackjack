@@ -1,11 +1,15 @@
-/* --- GLOBAL --- */
+/* =========================================
+   1. GLOBAL DEFAULTS
+   ========================================= */
 body {
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* --- LOGIN / REGISTER STYLES --- */
+/* =========================================
+   2. LOGIN & REGISTER PAGES (Purple Theme)
+   ========================================= */
 body.login-body {
     background-color: #020024;
     height: 100vh;
@@ -78,56 +82,83 @@ button:hover {
     text-decoration: none;
 }
 
-/* --- DASHBOARD STYLES --- */
+/* =========================================
+   3. DASHBOARD & NAVBAR (Dark Theme)
+   ========================================= */
 body.dashboard-body {
     background-color: #333333;
     color: white;
 }
 
+/* --- HEADER ALIGNMENT (Flexbox Fix) --- */
 .navbar {
     background-color: black;
-    padding: 15px 30px;
+    padding: 10px 30px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: center; 
     border-bottom: 2px solid #555;
+    height: 70px;
+    box-sizing: border-box;
 }
 
 .logo {
     color: #ff0000;
     font-size: 1.5rem;
+    font-weight: bold;
 }
 
 .user-controls {
     display: flex;
-    gap: 10px;
     align-items: center;
+    gap: 15px;
+    height: 100%;
 }
 
+/* Common style for Header Badges/Buttons */
+.credits-badge, 
+.user-badge, 
+.logout-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px; 
+    padding: 0 20px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    font-family: sans-serif;
+    border: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    line-height: 1;
+}
+
+/* Specific Colors */
 .credits-badge {
     background-color: #ffd700; /* Gold */
     color: black;
-    padding: 8px 15px;
-    border-radius: 4px;
-    font-weight: bold;
     border: 1px solid #d4af37;
-    margin-right: 10px;
+    cursor: default; 
 }
 
 .user-badge {
-    background-color: #8b0000;
-    padding: 8px 15px;
-    border-radius: 4px;
-    font-weight: bold;
-    border: 1px solid #ff4444;
+    background-color: #8b0000; /* Dark Red */
+    color: white;
+    text-decoration: none;
 }
 
 .logout-btn {
-    background-color: #f0f0f0;
+    background-color: #f0f0f0; /* White */
     color: black;
-    margin-top: 0;
 }
 
+.user-badge:hover, .logout-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* --- DASHBOARD CARDS --- */
 .game-container {
     display: flex;
     justify-content: center;
@@ -145,6 +176,7 @@ body.dashboard-body {
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     transition: transform 0.2s;
+    color: white;
 }
 
 .card:hover {
@@ -159,10 +191,12 @@ body.dashboard-body {
     position: fixed;
     bottom: 0;
     width: 100%;
+    color: white;
 }
 
-/* --- BUY CREDITS & PAYMENT STYLES --- */
-
+/* =========================================
+   4. BUY CREDITS & PAYMENT
+   ========================================= */
 .container-center {
     display: flex;
     flex-direction: column;
@@ -185,7 +219,7 @@ body.dashboard-body {
 }
 
 .bundle-card {
-    background-color: #a33333; /* Slightly lighter red */
+    background-color: #a33333;
     color: black;
     width: 180px;
     height: 220px;
@@ -206,16 +240,12 @@ body.dashboard-body {
     background-color: #c44444;
 }
 
-.bundle-card h3 {
-    margin-bottom: 5px;
-}
-
 .arrow {
     font-size: 2rem;
     margin: 10px 0;
 }
 
-/* Payment Page Layout */
+/* Payment Layout */
 .payment-container {
     display: flex;
     justify-content: center;
@@ -239,7 +269,7 @@ body.dashboard-body {
 }
 
 .payment-form {
-    background-color: #444; /* Dark Grey box */
+    background-color: #444;
     padding: 40px;
     border-radius: 30px;
     width: 350px;
@@ -249,7 +279,7 @@ body.dashboard-body {
 }
 
 .payment-form input {
-    background-color: #666; /* Input boxes */
+    background-color: #666;
     color: white;
     border: none;
     margin-bottom: 15px;
@@ -277,30 +307,29 @@ body.dashboard-body {
     background-color: #a30000;
 }
 
-/* --- POKER TABLE STYLES --- */
+/* =========================================
+   5. POKER TABLE
+   ========================================= */
 .poker-body {
-    background-color: #333; /* Dark background behind the table */
+    background-color: #333;
     color: white;
-    font-family: 'Segoe UI', sans-serif;
     height: 100vh;
-    overflow: hidden; /* Prevent scrolling */
+    overflow: hidden;
 }
 
-/* The Green Felt Table */
 .poker-table {
-    background-color: #2e5943; /* Dark Green */
+    background-color: #2e5943; /* Green Felt */
     height: 75vh;
     margin: 20px 50px;
     border-radius: 20px;
     border: 5px solid #1e3b2c;
-    display: flex; /* Use Flexbox for layout */
-    justify-content: space-around; /* Space items (Player - Board - House) */
+    display: flex;
+    justify-content: space-around;
     align-items: center;
     position: relative;
     box-shadow: inset 0 0 100px rgba(0,0,0,0.6);
 }
 
-/* 3 Main Sections: Player (Left), Board (Center), House (Right) */
 .player-section, .house-section {
     display: flex;
     flex-direction: column;
@@ -313,15 +342,15 @@ body.dashboard-body {
     display: flex;
     gap: 10px;
     padding: 20px;
-    background-color: rgba(0,0,0,0.2); /* Slight shadow for board area */
+    background-color: rgba(0,0,0,0.2);
     border-radius: 15px;
 }
 
-/* Card Styling (CSS Only - No Images!) */
+/* CSS Playing Cards */
 .card-slot {
     width: 80px;
     height: 120px;
-    background-color: #e0e0e0; /* Grey/White card base */
+    background-color: #e0e0e0;
     border-radius: 10px;
     border: 2px solid #333;
     display: flex;
@@ -332,14 +361,14 @@ body.dashboard-body {
     font-size: 1.4rem;
     box-shadow: 2px 4px 6px rgba(0,0,0,0.3);
     user-select: none;
-    transition: transform 0.3s;
+    color: black;
 }
 
 .card-red { color: #d00; } 
 .card-black { color: #000; }
 
 .card-hidden {
-    background-color: #777; /* Grey back like in your screenshot */
+    background-color: #777;
     background-image: repeating-linear-gradient(45deg, #666 0, #666 10px, #777 0, #777 20px);
     border: 2px solid #444;
 }
@@ -349,7 +378,6 @@ body.dashboard-body {
     font-size: 2.5rem;
 }
 
-/* Button Group under Player */
 .action-controls {
     display: flex;
     gap: 10px;
@@ -375,7 +403,6 @@ body.dashboard-body {
 .poker-btn:hover { opacity: 0.8; }
 .poker-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Labels */
 .section-label {
     background-color: rgba(0,0,0,0.5);
     padding: 5px 15px;
@@ -384,7 +411,6 @@ body.dashboard-body {
     color: #aaa;
 }
 
-/* Result Message Overlay */
 .message-overlay {
     position: absolute;
     top: 20%;
@@ -393,16 +419,15 @@ body.dashboard-body {
     border-radius: 10px;
     font-size: 2rem;
     z-index: 10;
-    display: none; /* Hidden by default */
+    display: none;
     border: 2px solid gold;
     color: gold;
     text-align: center;
 }
 
-/* ... (Keep all your existing code above this) ... */
-
-/* --- ACCOUNT PAGE STYLES --- */
-
+/* =========================================
+   6. ACCOUNT PAGE STYLES
+   ========================================= */
 .account-body {
     background-color: #333;
     color: white;
@@ -411,18 +436,17 @@ body.dashboard-body {
     min-height: 100vh;
 }
 
-/* Centers the two big cards in the middle of the screen */
 .account-main-content {
     flex-grow: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 50px; /* Space between the cards */
+    gap: 50px;
     padding-bottom: 50px;
 }
 
 .account-card {
-    background-color: #8b0000; /* Dark Red */
+    background-color: #8b0000;
     width: 320px;
     height: 380px;
     border-radius: 30px;
@@ -452,7 +476,6 @@ body.dashboard-body {
     font-style: italic;
 }
 
-/* The big money number */
 .stat-big {
     font-size: 3.5rem;
     font-weight: bold;
@@ -460,7 +483,6 @@ body.dashboard-body {
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
-/* Input field for withdrawing */
 .withdraw-input {
     width: 70%;
     padding: 12px;
@@ -472,7 +494,6 @@ body.dashboard-body {
     font-weight: bold;
 }
 
-/* White button inside the red card */
 .action-btn {
     background-color: white;
     color: #8b0000;
