@@ -5,95 +5,97 @@
     <title>My Account</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="dashboard-body">
+<body class="account-body">
 
     <nav class="navbar">
         <div class="logo">Queen of Hearts Casino</div>
         <div class="user-controls">
+            <span class="user-badge" id="account-username">Guest</span>
+            
             <button class="logout-btn" onclick="window.location.href='/dashboard'">Back to Dashboard</button>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </nav>
 
-    <div class="account-header">
-        <span class="user-badge" id="account-username">User</span>
-    </div>
-
-    <div class="container-center" style="flex-direction: row; gap: 40px;">
+    <div class="account-main-content">
         
-        <div class="bundle-card" style="width: 300px; height: 350px; cursor: default; background-color: #8b0000;">
-            <h2>Withdraw Credits</h2>
-            <p style="color: #ddd;">Convert credits to cash</p>
+        <div class="account-card">
+            <h2>Withdraw</h2>
+            <p>Cash out your credits</p>
             
-            <div style="margin-top: 30px;">
-                <input type="number" id="withdraw-amount" placeholder="Amount" style="width: 80%; padding: 10px; border-radius: 5px; border: none;">
+            <input type="number" id="withdraw-amount" class="withdraw-input" placeholder="Amount">
+            
+            <div style="font-weight: bold; margin-bottom: 10px;">
+                Balance: $<span id="current-balance">0</span>
             </div>
 
-            <p>Current Balance: $<span id="current-balance">0</span></p>
-
-            <button onclick="withdraw()" class="poker-btn" style="background-color: white; color: black; margin-top: 20px;">Withdraw</button>
+            <button onclick="withdraw()" class="action-btn">Withdraw</button>
         </div>
 
-        <div class="bundle-card" style="width: 300px; height: 350px; cursor: default; background-color: #8b0000;">
+        <div class="account-card">
             <h2>Overview</h2>
-            <p style="color: #ddd;">*Net earnings/losses*</p>
+            <p>*Net Earnings / Losses*</p>
             
-            <div style="margin-top: 50px; font-size: 2rem; font-weight: bold;" id="net-display">
-                $0
-            </div>
+            <div id="net-display" class="stat-big">$0</div>
             
-            <p style="margin-top: 40px; font-size: 0.9rem;">Total Withdrawn: $<span id="withdrawn-display">0</span></p>
+            <p>Total Withdrawn: $<span id="withdrawn-display">0</span></p>
         </div>
 
     </div>
+
+    <footer class="footer">Developed by T4B5</footer>
 
     <script>
         const username = localStorage.getItem('username');
-        document.getElementById('account-username').innerText = username;
+        if (username) document.getElementById('account-username').innerText = username;
 
-        // 1. Load Stats on Page Load
+        // 1. Load Stats
         async function loadStats() {
-            const response = await fetch('/my-stats', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username })
-            });
-            const data = await response.json();
-            
-            if (data.success) {
-                document.getElementById('current-balance').innerText = data.credits;
-                document.getElementById('withdrawn-display').innerText = data.totalWithdrawn;
+            try {
+                const response = await fetch('/my-stats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                const data = await response.json();
                 
-                const netElem = document.getElementById('net-display');
-                netElem.innerText = `$${data.netEarnings}`;
-                
-                // Color code the earnings
-                if (data.netEarnings > 0) netElem.style.color = "#00ff00"; // Green
-                else if (data.netEarnings < 0) netElem.style.color = "#ffcccc"; // Light Red
-                else netElem.style.color = "white";
-            }
+                if (data.success) {
+                    document.getElementById('current-balance').innerText = data.credits;
+                    document.getElementById('withdrawn-display').innerText = data.totalWithdrawn;
+                    
+                    const netElem = document.getElementById('net-display');
+                    netElem.innerText = `$${data.netEarnings}`;
+                    
+                    // Color Logic: Green for positive, Red for negative
+                    if (data.netEarnings > 0) netElem.style.color = "#4caf50"; 
+                    else if (data.netEarnings < 0) netElem.style.color = "#ff9999"; 
+                    else netElem.style.color = "white";
+                }
+            } catch (err) { console.error("Error loading stats"); }
         }
 
-        // 2. Withdraw Function
+        // 2. Withdraw Logic
         async function withdraw() {
             const amount = document.getElementById('withdraw-amount').value;
             if (!amount || amount <= 0) return alert("Enter a valid amount");
 
-            const response = await fetch('/withdraw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, amount })
-            });
-            const result = await response.json();
+            try {
+                const response = await fetch('/withdraw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, amount })
+                });
+                const result = await response.json();
 
-            if (result.success) {
-                alert(`Successfully withdrew $${amount}!`);
-                localStorage.setItem('credits', result.newBalance);
-                loadStats(); // Refresh numbers
-                document.getElementById('withdraw-amount').value = "";
-            } else {
-                alert(result.message || "Error withdrawing");
-            }
+                if (result.success) {
+                    alert(`Successfully withdrew $${amount}!`);
+                    localStorage.setItem('credits', result.newBalance);
+                    loadStats(); 
+                    document.getElementById('withdraw-amount').value = "";
+                } else {
+                    alert(result.message || "Error withdrawing");
+                }
+            } catch (err) { alert("Server error"); }
         }
 
         function logout() {
