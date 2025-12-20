@@ -29,10 +29,10 @@
             </div>
 
             <div class="action-controls">
-                <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()">Raise $20</button>
+                <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()">Raise $10</button>
                 <button class="poker-btn btn-check" id="btn-check" onclick="nextStage()">Check</button>
                 <button class="poker-btn btn-fold" id="btn-fold" onclick="fold()">Fold</button>
-                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">Deal Hand ($20)</button>
+                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">Deal Hand ($10)</button>
             </div>
         </div>
 
@@ -92,11 +92,11 @@
 
         // --- GAME ACTIONS ---
         function startGame() {
-            if (balance < 20) { alert("Need $20 to play!"); return; }
+            if (balance < 10) { alert("Need $10 to play!"); return; }
             
             // Deduct Buy-in
-            balance -= 20;
-            pot = 40; // You $20 + House $20
+            balance -= 10;
+            pot = 20; // You $20 + House $20
             stage = 0;
             
             // Reset Arrays
@@ -129,9 +129,9 @@
         }
 
         function raise() {
-            if (balance < 20) { alert("Not enough money!"); return; }
-            balance -= 20;
-            pot += 40; // You match + house matches
+            if (balance < 10) { alert("Not enough money!"); return; }
+            balance -= 10;
+            pot += 20; // You match + house matches
             updateUI();
             nextStage();
         }
