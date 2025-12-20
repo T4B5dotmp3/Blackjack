@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Buy Credits</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+
+    <nav class="navbar">
+        <div class="logo">Queen of Hearts Casino</div>
+        <div class="user-controls">
+            <span class="user-badge" onclick="window.location.href='/dashboard'">Back to Dashboard</span>
+        </div>
+    </nav>
+
+    <div class="container-center">
+        <div class="bundle-title-card">
+            <h2>Buy Credit Bundles!</h2>
+        </div>
+
+        <div class="bundle-container">
+            <div class="bundle-card" onclick="goToPayment(30, 10, 'Three of a Kind')">
+                <h3>Three of a kind</h3>
+                <p class="credit-amount">$30 credits</p>
+                <div class="arrow">↓</div>
+                <p class="cost">$10 CAD</p>
+            </div>
+
+            <div class="bundle-card" onclick="goToPayment(50, 15, 'Full House')">
+                <h3>Full House</h3>
+                <p class="credit-amount">$50 credits</p>
+                <div class="arrow">↓</div>
+                <p class="cost">$15 CAD</p>
+            </div>
+
+            <div class="bundle-card" onclick="goToPayment(100, 25, 'Royal Flush')">
+                <h3>Royal Flush</h3>
+                <p class="credit-amount">$100 credits</p>
+                <div class="arrow">↓</div>
+                <p class="cost">$25 CAD</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function goToPayment(credits, cost, name) {
+            // Send the details to the payment page via URL
+            window.location.href = `/payment?credits=${credits}&cost=${cost}&name=${name}`;
+        }
+    </script>
+</body>
+</html>

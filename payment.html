@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+
+    <nav class="navbar">
+        <div class="logo">Queen of Hearts Casino</div>
+        <div class="user-controls">
+            <span class="user-badge" onclick="window.location.href='/buy-credits'">Cancel</span>
+        </div>
+    </nav>
+
+    <div class="payment-container">
+        <div class="bundle-summary">
+            <h2 id="bundle-name">BUNDLE TYPE</h2>
+            <h3 id="bundle-cost">$0 CAD</h3>
+        </div>
+
+        <div class="payment-form">
+            <h3>I’m not going to ask for real money (yet)!</h3>
+            
+            <form id="paymentForm">
+                <input type="text" id="cardNumber" placeholder="Card Number" required>
+                
+                <div class="row">
+                    <input type="text" id="cardName" placeholder="Name on card" required>
+                    <input type="text" id="cardExp" placeholder="Exp. date" required style="width: 80px;">
+                    <input type="text" id="cardCvv" placeholder="CVV" required style="width: 60px;">
+                </div>
+
+                <button type="submit" class="pay-btn">Pay Now!</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 1. Read the URL to see what they are buying
+        const params = new URLSearchParams(window.location.search);
+        const credits = params.get('credits');
+        const cost = params.get('cost');
+        const name = params.get('name');
+
+        document.getElementById('bundle-name').innerText = name || "Credits";
+        document.getElementById('bundle-cost').innerText = `$${cost || 0} CAD`;
+
+        // 2. Handle the Payment Button
+        const form = document.getElementById('paymentForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Get values
+            const num = document.getElementById('cardNumber').value.trim();
+            const holder = document.getElementById('cardName').value.trim();
+            const exp = document.getElementById('cardExp').value.trim();
+            const cvv = document.getElementById('cardCvv').value.trim();
+
+            // 3. VALIDATE THE "FAKE" CREDENTIALS
+            if (num !== "0000 0000 0000 0000" || holder !== "ASWD" || exp !== "00/00" || cvv !== "000") {
+                alert("Payment Failed! Invalid Card Details.");
+                return;
+            }
+
+            // 4. If Valid, Tell Server to Add Money
+            const username = localStorage.getItem('username');
+            
+            try {
+                const response = await fetch('/add-credits', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, amount: parseInt(credits) })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`Success! Added $${credits} credits.`);
+                    localStorage.setItem('credits', result.newBalance); // Update local storage
+                    window.location.href = '/dashboard';
+                } else {
+                    alert("Error adding credits.");
+                }
+            } catch (err) {
+                alert("Server connection failed.");
+            }
+        });
+    </script>
+</body>
+</html>
