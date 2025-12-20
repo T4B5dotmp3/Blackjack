@@ -53,10 +53,10 @@ app.post('/register', async (req, res) => {
         if (existingUser) return res.status(400).json({ success: false, message: "User exists" });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, password: hashedPassword, credits: 1000 });
+        const newUser = new User({ username, password: hashedPassword, credits: 0 });
         await newUser.save();
         
-        res.json({ success: true, username: username, credits: 1000 });
+        res.json({ success: true, username: username, credits: 0 });
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: "Server error" });
