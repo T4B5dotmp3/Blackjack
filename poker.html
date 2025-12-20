@@ -91,22 +91,24 @@
 
         // --- GAME ACTIONS ---
         function startGame() {
+            // Updated: Check for $10 instead of $20
             if (balance < 10) { alert("Need $10 to play!"); return; }
             
-            // 1. Deduct Buy-in
-            balance -= 10;
-            pot = 20; 
+            // UI Updates
+            pot = 20; // You put $10, House puts $10
             stage = 0;
+            document.getElementById('game-message').style.display = 'none';
+            document.getElementById('btn-deal').style.display = 'none';
             
-            // 2. Logic Reset (New Cards)
+            // --- SERVER SYNC: Record the $10 Bet ---
+            // We tell server: "I bet 10, I won 0"
+            updateServerStats(10, 0); 
+
+            // Deck Logic
             createDeck();
             playerHand = [draw(), draw()];
             houseHand = [draw(), draw()]; 
             community = [];
-            
-            // 3. UI RESET
-            document.getElementById('game-message').style.display = 'none';
-            document.getElementById('btn-deal').style.display = 'none';
             
             // Force House cards to visually reset to hidden
             const houseDiv = document.getElementById('house-cards');
@@ -117,7 +119,7 @@
             
             toggleGameButtons(true);
             renderTable();
-            updateUI();
+            // Note: Balance updates automatically when updateServerStats returns
         }
 
         function nextStage() {
@@ -135,10 +137,14 @@
         }
 
         function raise() {
+            // Updated: Check for $10 raise
             if (balance < 10) { alert("Not enough money!"); return; }
-            balance -= 10;
-            pot += 20; 
-            updateUI();
+            
+            pot += 20; // You add 10, House adds 10
+            
+            // --- SERVER SYNC: Record the $10 Raise ---
+            updateServerStats(10, 0); 
+            
             nextStage();
         }
 
@@ -154,72 +160,77 @@
             houseDiv.innerHTML = '';
             houseHand.forEach(c => houseDiv.appendChild(createCardHTML(c)));
 
-            // Calculate Scores with NEW EVALUATOR
+            // Calculate Scores
             const playerScore = evaluateHand([...playerHand, ...community]);
             const houseScore = evaluateHand([...houseHand, ...community]);
 
             if (playerScore > houseScore) {
-                balance += pot;
                 showMessage(`You Win $${pot}!`, "#ffd700");
-                // Optional: save to server here
+                // --- SERVER SYNC: Record the WIN ---
+                // Tell server: "I bet 0 (already bet), I won POT"
+                updateServerStats(0, pot); 
             } else if (houseScore > playerScore) {
                 showMessage("House Wins.", "#ff4444");
+                // No update needed, money was already lost during betting
             } else {
-                balance += (pot / 2);
                 showMessage("Split Pot.", "white");
+                // Return half the pot
+                updateServerStats(0, pot / 2);
             }
             
-            updateUI();
             resetGameUI();
         }
 
-        // --- FIXED HAND EVALUATOR ---
+        // --- HAND EVALUATOR (Weighted Pairs) ---
         function evaluateHand(cards) {
             let score = 0;
             const rankCounts = {};
             const suitCounts = {};
 
-            // 1. Count Ranks and Suits
             cards.forEach(c => {
                 rankCounts[c.rank] = (rankCounts[c.rank] || 0) + 1;
                 suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
-                
-                // Add tiny score for high cards (tie-breaker)
-                // Aces (index 12) get 12 points, 2s get 0 points.
-                score += ranks.indexOf(c.rank); 
+                score += ranks.indexOf(c.rank); // Tie-breaker points
             });
 
-            // 2. Weight Matches (The Fix)
             for(let r in rankCounts) {
                 const count = rankCounts[r];
-                const rankValue = ranks.indexOf(r); // 0 (for 2) to 12 (for Ace)
+                const rankValue = ranks.indexOf(r);
                 
-                if (count === 2) {
-                    // Pair = 1000 base + (Rank Value * 50)
-                    // Pair of 2s = 1000 + 0 = 1000
-                    // Pair of Kings = 1000 + 550 = 1550
-                    score += 1000 + (rankValue * 50);
-                }
-                if (count === 3) {
-                    // Trips = 10,000 base
-                    score += 10000 + (rankValue * 50);
-                }
-                if (count === 4) {
-                    // Quads = 100,000 base
-                    score += 100000 + (rankValue * 50);
-                }
+                if (count === 2) score += 1000 + (rankValue * 50);
+                if (count === 3) score += 10000 + (rankValue * 50);
+                if (count === 4) score += 100000 + (rankValue * 50);
             }
 
-            // 3. Check Flush
             for(let s in suitCounts) {
-                if (suitCounts[s] >= 5) {
-                    score += 50000; // Flush beats Trips but loses to Quads
-                }
+                if (suitCounts[s] >= 5) score += 50000;
             }
             return score;
         }
 
-        // --- RENDERING ---
+        // --- RENDERING & SERVER HELPERS ---
+        
+        async function updateServerStats(bet, win) {
+            const username = localStorage.getItem('username');
+            
+            // Send game result to server so it updates 'totalWon', 'totalLost', etc.
+            const response = await fetch('/game-result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: username, 
+                    betAmount: bet, 
+                    winAmount: win 
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                balance = result.credits; // Update local balance to match server
+                updateUI();
+            }
+        }
+
         function createCardHTML(card) {
             const div = document.createElement('div');
             div.className = `card-slot ${card.color}`;
@@ -241,7 +252,7 @@
             const cDiv = document.getElementById('community-cards');
             cDiv.innerHTML = '';
             community.forEach(c => cDiv.appendChild(createCardHTML(c)));
-            // Render empty slots
+            
             for(let i=0; i < (5 - community.length); i++) {
                 const empty = document.createElement('div');
                 empty.className = 'card-slot card-hidden';

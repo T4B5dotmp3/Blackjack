@@ -14,7 +14,17 @@
             <span class="user-badge" id="username-display">Guest</span>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
-    </nav>
+    </nav> 
+
+<div class="user-controls">
+    <span class="credits-badge">Balance: $<span id="credits-display">0</span></span>
+    
+    <button class="user-badge" onclick="window.location.href='/account'" style="cursor: pointer; border: none;">
+        My Account
+    </button>
+    
+    <button class="logout-btn" onclick="logout()">Logout</button>
+</div> 
 
     <div class="game-container">
         <div class="card" onclick="window.location.href='/buy-credits'">
