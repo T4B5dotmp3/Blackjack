@@ -9,41 +9,42 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(__dirname));
 
-const MONGO_URI = process.env.MONGO_URI;
+// FIXED: Added { dotfiles: 'allow' } so it can serve CSS from inside .vscode
+app.use(express.static(__dirname, { dotfiles: 'allow' }));
 
-if (!MONGO_URI) {
-    console.warn('Warning: MONGO_URI is not set. Skipping MongoDB connection. Set MONGO_URI in a .env file to enable persistence.');
-} else {
-    mongoose.connect(MONGO_URI)
-        .then(() => console.log('MongoDB Connected'))
-        .catch(err => console.error('MongoDB connection error:', err));
-}
+const MONGO_URI = process.env.MONGO_URI; 
+
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('MongoDB Connected'))
+    .catch(err => console.log(err));
 
 // --- ROUTES ---
 
+// Helper option to allow serving files from hidden folders
+const fileOptions = { dotfiles: 'allow' };
+
 // 1. Root Route -> LOGIN Page
 app.get('/', (req, res) => {
-    console.log("Request received for Root URL (/)"); // This prints to terminal when you visit
-    res.sendFile(path.join(__dirname, 'login.html'));
+    res.sendFile(path.join(__dirname, 'login.html'), fileOptions);
 });
 
 // Explicit Login Route
 app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'login.html'));
+    res.sendFile(path.join(__dirname, 'login.html'), fileOptions);
 });
 
 // Register Route
 app.get('/register', (req, res) => {
-    res.sendFile(path.join(__dirname, 'register.html'));
+    res.sendFile(path.join(__dirname, 'register.html'), fileOptions);
 });
 
+// Dashboard Route
 app.get('/dashboard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dashboard.html'));
+    res.sendFile(path.join(__dirname, 'dashboard.html'), fileOptions);
 });
 
-// 2. Handle Registration (Returns JSON now)
+// 2. Handle Registration
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
 
@@ -62,8 +63,6 @@ app.post('/register', async (req, res) => {
         });
 
         await newUser.save();
-        
-        // SUCCESS: Send signal to frontend
         res.json({ success: true, username: username });
         
     } catch (err) {
@@ -72,7 +71,7 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// 3. Handle Login (Returns JSON now)
+// 3. Handle Login
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -87,7 +86,6 @@ app.post('/login', async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
 
-        // SUCCESS: Send signal to frontend
         res.json({ success: true, username: user.username });
 
     } catch (err) {
