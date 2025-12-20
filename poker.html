@@ -29,10 +29,10 @@
             </div>
 
             <div class="action-controls">
-                <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()">Raise $10</button>
+                <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()">Raise $20</button>
                 <button class="poker-btn btn-check" id="btn-check" onclick="nextStage()">Check</button>
                 <button class="poker-btn btn-fold" id="btn-fold" onclick="fold()">Fold</button>
-                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">Deal Hand ($10)</button>
+                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">Deal Hand ($20)</button>
             </div>
         </div>
 
@@ -63,7 +63,7 @@
         let playerHand = [];
         let houseHand = [];
         let community = [];
-        let stage = 0; // 0=PreFlop, 1=Flop, 2=Turn, 3=River, 4=End
+        let stage = 0; 
         let pot = 0;
         
         // Load User Info
@@ -92,24 +92,31 @@
 
         // --- GAME ACTIONS ---
         function startGame() {
-            if (balance < 10) { alert("Need $10 to play!"); return; }
+            if (balance < 20) { alert("Need $20 to play!"); return; }
             
-            // Deduct Buy-in
-            balance -= 10;
-            pot = 20; // You $20 + House $20
+            // 1. Deduct Buy-in
+            balance -= 20;
+            pot = 40; // You $20 + House $20
             stage = 0;
             
-            // Reset Arrays
+            // 2. Logic Reset (New Cards)
             createDeck();
             playerHand = [draw(), draw()];
-            houseHand = [draw(), draw()];
+            houseHand = [draw(), draw()]; // House gets new cards here
             community = [];
             
-            // UI Reset
+            // 3. UI RESET (The Fix!)
             document.getElementById('game-message').style.display = 'none';
             document.getElementById('btn-deal').style.display = 'none';
-            toggleGameButtons(true);
             
+            // FORCE HOUSE CARDS TO BE HIDDEN AGAIN
+            const houseDiv = document.getElementById('house-cards');
+            houseDiv.innerHTML = `
+                <div class="card-slot card-hidden"></div>
+                <div class="card-slot card-hidden"></div>
+            `;
+            
+            toggleGameButtons(true);
             renderTable();
             updateUI();
         }
@@ -129,9 +136,9 @@
         }
 
         function raise() {
-            if (balance < 10) { alert("Not enough money!"); return; }
-            balance -= 10;
-            pot += 20; // You match + house matches
+            if (balance < 20) { alert("Not enough money!"); return; }
+            balance -= 20;
+            pot += 40; // You match + house matches
             updateUI();
             nextStage();
         }
@@ -143,7 +150,7 @@
 
         // --- SHOWDOWN LOGIC ---
         function endGame() {
-            // Reveal House Cards
+            // Reveal House Cards (This replaces the hidden ones)
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = '';
             houseHand.forEach(c => houseDiv.appendChild(createCardHTML(c)));
@@ -155,7 +162,7 @@
             if (playerScore > houseScore) {
                 balance += pot;
                 showMessage(`You Win $${pot}!`, "#ffd700");
-                // TODO: Save to Server (fetch /add-credits)
+                saveCredits(pot); // Optional: Save win to server
             } else if (houseScore > playerScore) {
                 showMessage("House Wins.", "#ff4444");
             } else {
@@ -168,7 +175,6 @@
         }
 
         // --- HELPER: Simple Hand Evaluator ---
-        // Scores: Pair=100, 3-Kind=300, Flush=500 + High Card rank
         function evaluateHand(cards) {
             let score = 0;
             const rankCounts = {};
@@ -217,10 +223,11 @@
             cDiv.innerHTML = '';
             // Render dealt cards
             community.forEach(c => cDiv.appendChild(createCardHTML(c)));
-            // Render empty slots for remaining
+            // Render empty slots for remaining cards
             for(let i=0; i < (5 - community.length); i++) {
                 const empty = document.createElement('div');
                 empty.className = 'card-slot card-hidden';
+                empty.style.opacity = "0.5";
                 cDiv.appendChild(empty);
             }
         }
@@ -248,6 +255,11 @@
             document.getElementById('btn-raise').disabled = !active;
             document.getElementById('btn-check').disabled = !active;
             document.getElementById('btn-fold').disabled = !active;
+        }
+
+        // Optional: Call this to persist wins to DB
+        async function saveCredits(amount) {
+            // Implementation depends on server support
         }
     </script>
 </body>
