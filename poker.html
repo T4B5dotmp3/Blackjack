@@ -29,10 +29,10 @@
             </div>
 
             <div class="action-controls">
-                <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()">Raise $10</button>
+                <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()">Raise $20</button>
                 <button class="poker-btn btn-check" id="btn-check" onclick="nextStage()">Check</button>
                 <button class="poker-btn btn-fold" id="btn-fold" onclick="fold()">Fold</button>
-                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">Deal Hand ($10)</button>
+                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">Deal Hand ($20)</button>
             </div>
         </div>
 
@@ -84,7 +84,6 @@
                     deck.push({ rank: r, suit: s, color: (s === '♥' || s === '♦') ? 'card-red' : 'card-black' });
                 }
             }
-            // Shuffle
             deck.sort(() => Math.random() - 0.5);
         }
 
@@ -92,24 +91,24 @@
 
         // --- GAME ACTIONS ---
         function startGame() {
-            if (balance < 10) { alert("Need $10 to play!"); return; }
+            if (balance < 20) { alert("Need $20 to play!"); return; }
             
             // 1. Deduct Buy-in
-            balance -= 10;
-            pot = 20; // You $10 + House $10
+            balance -= 20;
+            pot = 40; 
             stage = 0;
             
             // 2. Logic Reset (New Cards)
             createDeck();
             playerHand = [draw(), draw()];
-            houseHand = [draw(), draw()]; // House gets new cards here
+            houseHand = [draw(), draw()]; 
             community = [];
             
-            // 3. UI RESET (The Fix!)
+            // 3. UI RESET
             document.getElementById('game-message').style.display = 'none';
             document.getElementById('btn-deal').style.display = 'none';
             
-            // FORCE HOUSE CARDS TO BE HIDDEN AGAIN
+            // Force House cards to visually reset to hidden
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = `
                 <div class="card-slot card-hidden"></div>
@@ -136,9 +135,9 @@
         }
 
         function raise() {
-            if (balance < 10) { alert("Not enough money!"); return; }
-            balance -= 10;
-            pot += 20; // You match + house matches
+            if (balance < 20) { alert("Not enough money!"); return; }
+            balance -= 20;
+            pot += 40; 
             updateUI();
             nextStage();
         }
@@ -150,19 +149,19 @@
 
         // --- SHOWDOWN LOGIC ---
         function endGame() {
-            // Reveal House Cards (This replaces the hidden ones)
+            // Reveal House Cards
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = '';
             houseHand.forEach(c => houseDiv.appendChild(createCardHTML(c)));
 
-            // Calculate Scores
+            // Calculate Scores with NEW EVALUATOR
             const playerScore = evaluateHand([...playerHand, ...community]);
             const houseScore = evaluateHand([...houseHand, ...community]);
 
             if (playerScore > houseScore) {
                 balance += pot;
                 showMessage(`You Win $${pot}!`, "#ffd700");
-                saveCredits(pot); // Optional: Save win to server
+                // Optional: save to server here
             } else if (houseScore > playerScore) {
                 showMessage("House Wins.", "#ff4444");
             } else {
@@ -174,28 +173,48 @@
             resetGameUI();
         }
 
-        // --- HELPER: Simple Hand Evaluator ---
+        // --- FIXED HAND EVALUATOR ---
         function evaluateHand(cards) {
             let score = 0;
             const rankCounts = {};
             const suitCounts = {};
 
+            // 1. Count Ranks and Suits
             cards.forEach(c => {
                 rankCounts[c.rank] = (rankCounts[c.rank] || 0) + 1;
                 suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
-                score += ranks.indexOf(c.rank); // High card tie-breaker
+                
+                // Add tiny score for high cards (tie-breaker)
+                // Aces (index 12) get 12 points, 2s get 0 points.
+                score += ranks.indexOf(c.rank); 
             });
 
-            // Check Pairs/Trips
+            // 2. Weight Matches (The Fix)
             for(let r in rankCounts) {
-                if (rankCounts[r] === 2) score += 100;
-                if (rankCounts[r] === 3) score += 300;
-                if (rankCounts[r] === 4) score += 700;
+                const count = rankCounts[r];
+                const rankValue = ranks.indexOf(r); // 0 (for 2) to 12 (for Ace)
+                
+                if (count === 2) {
+                    // Pair = 1000 base + (Rank Value * 50)
+                    // Pair of 2s = 1000 + 0 = 1000
+                    // Pair of Kings = 1000 + 550 = 1550
+                    score += 1000 + (rankValue * 50);
+                }
+                if (count === 3) {
+                    // Trips = 10,000 base
+                    score += 10000 + (rankValue * 50);
+                }
+                if (count === 4) {
+                    // Quads = 100,000 base
+                    score += 100000 + (rankValue * 50);
+                }
             }
 
-            // Check Flush
+            // 3. Check Flush
             for(let s in suitCounts) {
-                if (suitCounts[s] >= 5) score += 500;
+                if (suitCounts[s] >= 5) {
+                    score += 50000; // Flush beats Trips but loses to Quads
+                }
             }
             return score;
         }
@@ -221,9 +240,8 @@
             // Render Community
             const cDiv = document.getElementById('community-cards');
             cDiv.innerHTML = '';
-            // Render dealt cards
             community.forEach(c => cDiv.appendChild(createCardHTML(c)));
-            // Render empty slots for remaining cards
+            // Render empty slots
             for(let i=0; i < (5 - community.length); i++) {
                 const empty = document.createElement('div');
                 empty.className = 'card-slot card-hidden';
@@ -255,11 +273,6 @@
             document.getElementById('btn-raise').disabled = !active;
             document.getElementById('btn-check').disabled = !active;
             document.getElementById('btn-fold').disabled = !active;
-        }
-
-        // Optional: Call this to persist wins to DB
-        async function saveCredits(amount) {
-            // Implementation depends on server support
         }
     </script>
 </body>
