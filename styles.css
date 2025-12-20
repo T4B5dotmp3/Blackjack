@@ -1,9 +1,13 @@
-/* style.css */
+/* --- GLOBAL --- */
 body {
     margin: 0;
     padding: 0;
-    background-color: #020024; /* Deep dark blue background */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- LOGIN / REGISTER STYLES --- */
+body.login-body {
+    background-color: #020024;
     height: 100vh;
     display: flex;
     justify-content: center;
@@ -11,9 +15,9 @@ body {
 }
 
 .container {
-    background-color: #2b005e; /* Purple container */
+    background-color: #2b005e;
     padding: 40px;
-    border-radius: 40px; /* Highly rounded corners */
+    border-radius: 40px;
     width: 300px;
     text-align: center;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
@@ -22,7 +26,7 @@ body {
     gap: 20px;
 }
 
-h1 {
+.container h1 {
     color: white;
     margin-top: 0;
     font-weight: normal;
@@ -30,7 +34,6 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Styling the inputs to look like the white boxes in your image */
 .input-group {
     display: flex;
     flex-direction: column;
@@ -42,36 +45,12 @@ input {
     padding: 15px;
     border-radius: 8px;
     border: none;
-    background-color: #e0e0e0; /* Light gray/white */
+    background-color: #e0e0e0;
     font-size: 1rem;
-    box-sizing: border-box; /* Ensures padding doesn't widen the box */
+    box-sizing: border-box;
     outline: none;
 }
 
-input::placeholder {
-    color: #333;
-    font-weight: 500;
-}
-
-/* The footer links (No Account? Make one!) */
-.footer-text {
-    color: white;
-    margin-top: 10px;
-    font-size: 1rem;
-}
-
-.footer-text a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.footer-text a:hover {
-    text-decoration: underline;
-}
-
-/* Submit Button - Note: Your image didn't show one, 
-   but you need one to submit the form! I added a subtle one. */
 button {
     margin-top: 10px;
     padding: 12px;
@@ -88,16 +67,23 @@ button:hover {
     background-color: #5e00b3;
 }
 
-/* --- DASHBOARD STYLES --- */
+.footer-text {
+    color: white;
+    margin-top: 10px;
+}
 
-.dashboard-body {
-    background-color: #333333; /* Dark Grey Background */
-    display: block; /* Overrides the flex centering from the login page */
-    height: 100vh;
+.footer-text a {
+    color: white;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* --- DASHBOARD STYLES --- */
+body.dashboard-body {
+    background-color: #333333;
     color: white;
 }
 
-/* The Top Bar */
 .navbar {
     background-color: black;
     padding: 15px 30px;
@@ -108,9 +94,8 @@ button:hover {
 }
 
 .logo {
-    color: #ff0000; /* Bright Red */
+    color: #ff0000;
     font-size: 1.5rem;
-    font-weight: normal; /* As per your image */
 }
 
 .user-controls {
@@ -119,12 +104,20 @@ button:hover {
     align-items: center;
 }
 
-.user-badge {
-    background-color: #8b0000; /* Dark Red background */
-    color: white;
+.credits-badge {
+    background-color: #ffd700; /* Gold */
+    color: black;
     padding: 8px 15px;
     border-radius: 4px;
-    font-style: italic;
+    font-weight: bold;
+    border: 1px solid #d4af37;
+    margin-right: 10px;
+}
+
+.user-badge {
+    background-color: #8b0000;
+    padding: 8px 15px;
+    border-radius: 4px;
     font-weight: bold;
     border: 1px solid #ff4444;
 }
@@ -132,62 +125,38 @@ button:hover {
 .logout-btn {
     background-color: #f0f0f0;
     color: black;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 0; /* Override previous button styles */
+    margin-top: 0;
 }
 
-.logout-btn:hover {
-    background-color: #ddd;
-}
-
-/* Main Area with the 3 Big Buttons */
 .game-container {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 40px;
-    height: 70vh; /* Takes up most of the screen */
+    height: 70vh;
 }
 
 .card {
-    background-color: #8b0000; /* Dark Red */
+    background-color: #8b0000;
     width: 200px;
     padding: 20px;
     border-radius: 15px;
     text-align: center;
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-    transition: transform 0.2s, background-color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 80px;
+    transition: transform 0.2s;
 }
 
 .card:hover {
-    transform: scale(1.05); /* Slightly grows on hover */
-    background-color: #a30000; /* Lighter red on hover */
+    transform: scale(1.05);
+    background-color: #a30000;
 }
 
-.card h2 {
-    color: white;
-    font-size: 1.4rem;
-    margin: 0;
-    font-weight: normal;
-}
-
-/* Footer */
 .footer {
     background-color: black;
-    color: white;
     text-align: center;
     padding: 15px;
     position: fixed;
     bottom: 0;
     width: 100%;
-    font-size: 0.9rem;
 }

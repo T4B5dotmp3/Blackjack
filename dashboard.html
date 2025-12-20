@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Queen of Hearts Casino</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="dashboard-body">
 
     <nav class="navbar">
         <div class="logo">Queen of Hearts Casino</div>
         <div class="user-controls">
+            <span class="credits-badge">Balance: $<span id="credits-display">0</span></span>
             <span class="user-badge" id="username-display">Guest</span>
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
@@ -20,29 +20,26 @@
         <div class="card" onclick="window.location.href='/buy-credits'">
             <h2>Buy Credits!</h2>
         </div>
-
         <div class="card" onclick="window.location.href='/poker'">
             <h2>Play Poker</h2>
         </div>
-
         <div class="card" onclick="window.location.href='/blackjack'">
             <h2>Play Blackjack</h2>
         </div>
     </div>
 
-    <footer class="footer">
-        Developed by T4B5
-    </footer>
+    <footer class="footer">Developed by T4B5</footer>
 
     <script>
-        // Simple script to show the username if we have it saved
+        // Load data from storage
         const user = localStorage.getItem('username');
-        if (user) {
-            document.getElementById('username-display').innerText = user;
-        }
+        const credits = localStorage.getItem('credits');
+
+        if (user) document.getElementById('username-display').innerText = user;
+        if (credits) document.getElementById('credits-display').innerText = credits;
 
         function logout() {
-            localStorage.removeItem('username');
+            localStorage.clear();
             window.location.href = '/login';
         }
     </script>
