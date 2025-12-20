@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Play Poker</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="poker-body">
+
+    <nav class="navbar">
+        <div class="logo">Queen of Hearts Poker</div>
+        <div class="user-controls">
+            <span class="credits-badge">Pot: $<span id="pot-display">0</span></span>
+            <span class="credits-badge">Balance: $<span id="balance-display">0</span></span>
+            <span class="user-badge" id="username-display">Guest</span>
+            <button class="logout-btn" onclick="window.location.href='/dashboard'">Exit</button>
+        </div>
+    </nav>
+
+    <div class="poker-table">
+        
+        <div id="game-message" class="message-overlay">You Win!</div>
+
+        <div class="player-section">
+            <div class="section-label">Your Hand</div>
+            <div style="display: flex; gap: 10px;" id="player-cards">
+                <div class="card-slot card-hidden"></div>
+                <div class="card-slot card-hidden"></div>
+            </div>
+
+            <div class="action-controls">
+                <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()">Raise $20</button>
+                <button class="poker-btn btn-check" id="btn-check" onclick="nextStage()">Check</button>
+                <button class="poker-btn btn-fold" id="btn-fold" onclick="fold()">Fold</button>
+                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">Deal Hand ($20)</button>
+            </div>
+        </div>
+
+        <div class="board-section" id="community-cards">
+            <div class="card-slot card-hidden" style="opacity: 0.5;"></div>
+            <div class="card-slot card-hidden" style="opacity: 0.5;"></div>
+            <div class="card-slot card-hidden" style="opacity: 0.5;"></div>
+            <div class="card-slot card-hidden" style="opacity: 0.5;"></div>
+            <div class="card-slot card-hidden" style="opacity: 0.5;"></div>
+        </div>
+
+        <div class="house-section">
+            <div class="section-label">The House has :</div>
+            <div style="display: flex; gap: 10px;" id="house-cards">
+                <div class="card-slot card-hidden"></div>
+                <div class="card-slot card-hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">Developed by T4B5</footer>
+
+    <script>
+        // --- CONFIG ---
+        const suits = ['♥', '♦', '♣', '♠'];
+        const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        let deck = [];
+        let playerHand = [];
+        let houseHand = [];
+        let community = [];
+        let stage = 0; // 0=PreFlop, 1=Flop, 2=Turn, 3=River, 4=End
+        let pot = 0;
+        
+        // Load User Info
+        let balance = parseInt(localStorage.getItem('credits')) || 0;
+        const user = localStorage.getItem('username') || 'Guest';
+        document.getElementById('username-display').innerText = user;
+        updateUI();
+        
+        // Show "Deal" button initially
+        toggleGameButtons(false);
+        document.getElementById('btn-deal').style.display = 'block';
+
+        // --- DECK LOGIC ---
+        function createDeck() {
+            deck = [];
+            for(let s of suits) {
+                for(let r of ranks) {
+                    deck.push({ rank: r, suit: s, color: (s === '♥' || s === '♦') ? 'card-red' : 'card-black' });
+                }
+            }
+            // Shuffle
+            deck.sort(() => Math.random() - 0.5);
+        }
+
+        function draw() { return deck.pop(); }
+
+        // --- GAME ACTIONS ---
+        function startGame() {
+            if (balance < 20) { alert("Need $20 to play!"); return; }
+            
+            // Deduct Buy-in
+            balance -= 20;
+            pot = 40; // You $20 + House $20
+            stage = 0;
+            
+            // Reset Arrays
+            createDeck();
+            playerHand = [draw(), draw()];
+            houseHand = [draw(), draw()];
+            community = [];
+            
+            // UI Reset
+            document.getElementById('game-message').style.display = 'none';
+            document.getElementById('btn-deal').style.display = 'none';
+            toggleGameButtons(true);
+            
+            renderTable();
+            updateUI();
+        }
+
+        function nextStage() {
+            if (stage === 0) { // Flop
+                community.push(draw(), draw(), draw());
+                stage++;
+            } else if (stage === 1 || stage === 2) { // Turn & River
+                community.push(draw());
+                stage++;
+            } else { // Showdown
+                endGame();
+                return;
+            }
+            renderTable();
+        }
+
+        function raise() {
+            if (balance < 20) { alert("Not enough money!"); return; }
+            balance -= 20;
+            pot += 40; // You match + house matches
+            updateUI();
+            nextStage();
+        }
+
+        function fold() {
+            showMessage("You Folded.", "red");
+            resetGameUI();
+        }
+
+        // --- SHOWDOWN LOGIC ---
+        function endGame() {
+            // Reveal House Cards
+            const houseDiv = document.getElementById('house-cards');
+            houseDiv.innerHTML = '';
+            houseHand.forEach(c => houseDiv.appendChild(createCardHTML(c)));
+
+            // Calculate Scores
+            const playerScore = evaluateHand([...playerHand, ...community]);
+            const houseScore = evaluateHand([...houseHand, ...community]);
+
+            if (playerScore > houseScore) {
+                balance += pot;
+                showMessage(`You Win $${pot}!`, "#ffd700");
+                // TODO: Save to Server (fetch /add-credits)
+            } else if (houseScore > playerScore) {
+                showMessage("House Wins.", "#ff4444");
+            } else {
+                balance += (pot / 2);
+                showMessage("Split Pot.", "white");
+            }
+            
+            updateUI();
+            resetGameUI();
+        }
+
+        // --- HELPER: Simple Hand Evaluator ---
+        // Scores: Pair=100, 3-Kind=300, Flush=500 + High Card rank
+        function evaluateHand(cards) {
+            let score = 0;
+            const rankCounts = {};
+            const suitCounts = {};
+
+            cards.forEach(c => {
+                rankCounts[c.rank] = (rankCounts[c.rank] || 0) + 1;
+                suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
+                score += ranks.indexOf(c.rank); // High card tie-breaker
+            });
+
+            // Check Pairs/Trips
+            for(let r in rankCounts) {
+                if (rankCounts[r] === 2) score += 100;
+                if (rankCounts[r] === 3) score += 300;
+                if (rankCounts[r] === 4) score += 700;
+            }
+
+            // Check Flush
+            for(let s in suitCounts) {
+                if (suitCounts[s] >= 5) score += 500;
+            }
+            return score;
+        }
+
+        // --- RENDERING ---
+        function createCardHTML(card) {
+            const div = document.createElement('div');
+            div.className = `card-slot ${card.color}`;
+            div.innerHTML = `
+                <div>${card.rank}</div>
+                <div class="card-center-suit">${card.suit}</div>
+                <div style="transform: rotate(180deg); text-align: right;">${card.rank}</div>
+            `;
+            return div;
+        }
+
+        function renderTable() {
+            // Render Player
+            const pDiv = document.getElementById('player-cards');
+            pDiv.innerHTML = '';
+            playerHand.forEach(c => pDiv.appendChild(createCardHTML(c)));
+
+            // Render Community
+            const cDiv = document.getElementById('community-cards');
+            cDiv.innerHTML = '';
+            // Render dealt cards
+            community.forEach(c => cDiv.appendChild(createCardHTML(c)));
+            // Render empty slots for remaining
+            for(let i=0; i < (5 - community.length); i++) {
+                const empty = document.createElement('div');
+                empty.className = 'card-slot card-hidden';
+                cDiv.appendChild(empty);
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('pot-display').innerText = pot;
+            document.getElementById('balance-display').innerText = balance;
+            localStorage.setItem('credits', balance);
+        }
+
+        function showMessage(msg, color) {
+            const el = document.getElementById('game-message');
+            el.innerText = msg;
+            el.style.color = color;
+            el.style.borderColor = color;
+            el.style.display = 'block';
+        }
+
+        function resetGameUI() {
+            toggleGameButtons(false);
+            document.getElementById('btn-deal').style.display = 'block';
+        }
+
+        function toggleGameButtons(active) {
+            document.getElementById('btn-raise').disabled = !active;
+            document.getElementById('btn-check').disabled = !active;
+            document.getElementById('btn-fold').disabled = !active;
+        }
+    </script>
+</body>
+</html>

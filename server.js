@@ -40,6 +40,7 @@ app.get('/', (req, res) => renderPage(res, 'login.html'));
 app.get('/login', (req, res) => renderPage(res, 'login.html'));
 app.get('/register', (req, res) => renderPage(res, 'register.html'));
 app.get('/dashboard', (req, res) => renderPage(res, 'dashboard.html'));
+app.get('/poker', (req, res) => renderPage(res, 'poker.html'));
 
 // 2. New Payment Pages
 app.get('/buy-credits', (req, res) => renderPage(res, 'buy-credits.html'));
