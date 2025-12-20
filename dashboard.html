@@ -11,47 +11,53 @@
         <div class="logo">Queen of Hearts Casino</div>
         <div class="user-controls">
             <span class="credits-badge">Balance: $<span id="credits-display">0</span></span>
-            <span class="user-badge" id="username-display">Guest</span>
+            
+            <button id="username-btn" class="user-badge" onclick="window.location.href='/account'" style="cursor: pointer; border: none;">
+                Guest
+            </button>
+            
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
-    </nav> 
-
-<div class="user-controls">
-    <span class="credits-badge">Balance: $<span id="credits-display">0</span></span>
-    
-    <button class="user-badge" onclick="window.location.href='/account'" style="cursor: pointer; border: none;">
-        My Account
-    </button>
-    
-    <button class="logout-btn" onclick="logout()">Logout</button>
-</div> 
+    </nav>
 
     <div class="game-container">
         <div class="card" onclick="window.location.href='/buy-credits'">
             <h2>Buy Credits!</h2>
+            <p style="color: #ddd; font-size: 0.9rem;">Top up your balance</p>
         </div>
+
         <div class="card" onclick="window.location.href='/poker'">
             <h2>Play Poker</h2>
+            <p style="color: #ddd; font-size: 0.9rem;">Texas Hold'em</p>
         </div>
-        <div class="card" onclick="window.location.href='/blackjack'">
+
+        <div class="card" onclick="alert('Blackjack is coming soon!')">
             <h2>Play Blackjack</h2>
+            <p style="color: #ddd; font-size: 0.9rem;">Beat the dealer</p>
         </div>
     </div>
 
     <footer class="footer">Developed by T4B5</footer>
 
-    
     <script>
-        // Load data from storage
+        // 1. Get Data from Local Storage
         const user = localStorage.getItem('username');
         const credits = localStorage.getItem('credits');
 
-        if (user) document.getElementById('username-display').innerText = user;
-        if (credits) document.getElementById('credits-display').innerText = credits;
+        // 2. Set the Button Text to the Username
+        if (user) {
+            document.getElementById('username-btn').innerText = user;
+        }
 
+        // 3. Set the Balance
+        if (credits) {
+            document.getElementById('credits-display').innerText = credits;
+        }
+
+        // 4. Logout Logic
         function logout() {
-            localStorage.clear();
-            window.location.href = '/login';
+            localStorage.clear(); 
+            window.location.href = '/login'; 
         }
     </script>
 </body>
