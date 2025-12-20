@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
-const User = require('/models/User');
+const User = require('./models/User.js');
 
 const app = express();
 
