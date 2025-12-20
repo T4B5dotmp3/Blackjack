@@ -38,6 +38,8 @@ app.get('/dashboard', (req, res) => renderPage(res, 'dashboard.html'));
 app.get('/buy-credits', (req, res) => renderPage(res, 'buy-credits.html'));
 app.get('/payment', (req, res) => renderPage(res, 'payment.html'));
 app.get('/poker', (req, res) => renderPage(res, 'poker.html'));
+app.get('/blackjack', (req, res) => renderPage(res, 'blackjack.html'));
+
 // NEW: Account Page
 app.get('/account', (req, res) => renderPage(res, 'account.html')); 
 

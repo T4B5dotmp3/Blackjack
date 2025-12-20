@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Play Blackjack</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="poker-body">
+
+    <nav class="navbar">
+        <div class="logo">Queen of Hearts Casino</div>
+        <div class="user-controls">
+            <span class="credits-badge">Bet: $<span id="current-bet">0</span></span>
+            <span class="credits-badge">Balance: $<span id="balance-display">0</span></span>
+            <button id="username-btn" class="user-badge" onclick="window.location.href='/account'">Guest</button>
+            <button class="logout-btn" onclick="window.location.href='/dashboard'">Exit</button>
+        </div>
+    </nav>
+
+    <div class="poker-table">
+        
+        <div id="bj-popup" class="bj-popup">BLACKJACK!</div>
+        
+        <div id="game-message" class="message-overlay">You Win!</div>
+
+        <div class="player-section">
+            <div class="section-label">Your Hand <span id="player-score">(0)</span></div>
+            <div style="display: flex; gap: 10px;" id="player-cards">
+                <div class="card-slot card-hidden"></div>
+                <div class="card-slot card-hidden"></div>
+            </div>
+        </div>
+
+        <div class="blackjack-center-rules">
+            <p>☆ Blackjack pays 3 to 2 ☆</p>
+            <p>☆ Dealer stands on 17 ☆</p>
+            <p>☆ Insurance pays 2 to 1 ☆</p>
+        </div>
+
+        <div class="house-section">
+            <div class="section-label">The House</div>
+            <div style="display: flex; gap: 10px;" id="house-cards">
+                <div class="card-slot card-hidden"></div>
+                <div class="card-slot card-hidden"></div>
+            </div>
+        </div>
+
+        <div class="betting-controls" id="bet-controls">
+            <button class="bet-btn" onclick="startGame(5)">$5</button>
+            <button class="bet-btn" onclick="startGame(10)">$10</button>
+            <button class="bet-btn" onclick="startGame(15)">$15</button>
+        </div>
+
+        <div class="game-actions">
+            <button class="poker-btn btn-hit" id="btn-hit" onclick="hit()" disabled>HIT</button>
+            <button class="poker-btn btn-stand" id="btn-stand" onclick="stand()" disabled>STAND</button>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIG ---
+        const suits = ['♥', '♦', '♣', '♠'];
+        const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        
+        let deck = [];
+        let playerHand = [];
+        let houseHand = [];
+        let currentBet = 0;
+        let balance = parseInt(localStorage.getItem('credits')) || 0;
+        let gameOver = true;
+
+        // Init UI
+        document.getElementById('balance-display').innerText = balance;
+        document.getElementById('username-btn').innerText = localStorage.getItem('username') || 'Guest';
+
+        // --- DECK LOGIC ---
+        function createDeck() {
+            deck = [];
+            for(let s of suits) {
+                for(let r of ranks) {
+                    let val = parseInt(r);
+                    if (['J','Q','K'].includes(r)) val = 10;
+                    if (r === 'A') val = 11;
+                    deck.push({ rank: r, suit: s, value: val, color: (s === '♥' || s === '♦') ? 'card-red' : 'card-black' });
+                }
+            }
+            deck.sort(() => Math.random() - 0.5);
+        }
+
+        function draw() { return deck.pop(); }
+
+        // --- GAME START ---
+        function startGame(amount) {
+            if (balance < amount) return alert("Not enough credits!");
+            
+            // 1. Setup
+            currentBet = amount;
+            balance -= amount; // Deduct visually
+            gameOver = false;
+            createDeck();
+            
+            // 2. Server Sync (Record Bet)
+            updateServerStats(amount, 0);
+
+            // 3. Deal Cards
+            playerHand = [draw(), draw()];
+            houseHand = [draw(), draw()];
+            
+            // 4. Update UI
+            document.getElementById('game-message').style.display = 'none';
+            document.getElementById('bj-popup').classList.remove('show');
+            document.getElementById('current-bet').innerText = currentBet;
+            toggleControls(true);
+            renderTable(false); // Hide dealer's 2nd card
+
+            // 5. CHECK FOR BLACKJACK IMMEDIATELY
+            const pScore = calculateScore(playerHand);
+            if (pScore === 21) {
+                setTimeout(() => handleBlackjack(), 500);
+            }
+        }
+
+        // --- ACTIONS ---
+        function hit() {
+            if (gameOver) return;
+            playerHand.push(draw());
+            renderTable(false);
+            
+            if (calculateScore(playerHand) > 21) {
+                endGame("Bust! House Wins.");
+            }
+        }
+
+        function stand() {
+            if (gameOver) return;
+            
+            // Dealer Turn
+            let dScore = calculateScore(houseHand);
+            while (dScore < 17) {
+                houseHand.push(draw());
+                dScore = calculateScore(houseHand);
+            }
+            
+            renderTable(true); // Reveal dealer card
+            determineWinner();
+        }
+
+        // --- WINNER LOGIC ---
+        function handleBlackjack() {
+            // Check if dealer also has BJ
+            if (calculateScore(houseHand) === 21) {
+                renderTable(true);
+                endGame("Push (Tie)", currentBet);
+            } else {
+                // PLAYER WINS 3:2
+                renderTable(true);
+                const winAmount = currentBet + (currentBet * 1.5);
+                
+                // Show Popup
+                const popup = document.getElementById('bj-popup');
+                popup.classList.add('show');
+                
+                // Delay standard message slightly
+                setTimeout(() => {
+                    popup.classList.remove('show');
+                    endGame("BLACKJACK! Pays 3:2", winAmount);
+                }, 2000);
+            }
+        }
+
+        function determineWinner() {
+            const pScore = calculateScore(playerHand);
+            const dScore = calculateScore(houseHand);
+
+            if (dScore > 21) {
+                endGame("Dealer Busts! You Win.", currentBet * 2);
+            } else if (pScore > dScore) {
+                endGame("You Win!", currentBet * 2);
+            } else if (dScore > pScore) {
+                endGame("House Wins.");
+            } else {
+                endGame("Push.", currentBet);
+            }
+        }
+
+        function endGame(msg, payout = 0) {
+            gameOver = true;
+            toggleControls(false);
+            
+            // Show Message
+            const msgEl = document.getElementById('game-message');
+            msgEl.innerText = msg;
+            msgEl.style.display = 'block';
+            msgEl.style.color = payout > currentBet ? '#ffd700' : (payout === currentBet ? 'white' : '#ff4444');
+
+            // Server Sync (Record Winnings)
+            if (payout > 0) {
+                // We pass 0 as betAmount because we already deducted it at start
+                updateServerStats(0, payout);
+            }
+        }
+
+        // --- HELPERS ---
+        function calculateScore(hand) {
+            let score = 0;
+            let aces = 0;
+            hand.forEach(c => {
+                score += c.value;
+                if (c.rank === 'A') aces++;
+            });
+            // Adjust Aces (11 -> 1) if bust
+            while (score > 21 && aces > 0) {
+                score -= 10;
+                aces--;
+            }
+            return score;
+        }
+
+        async function updateServerStats(bet, win) {
+            const username = localStorage.getItem('username');
+            try {
+                const response = await fetch('/game-result', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, betAmount: bet, winAmount: win })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    balance = result.credits;
+                    document.getElementById('balance-display').innerText = balance;
+                    localStorage.setItem('credits', balance);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // --- RENDERING ---
+        function createCardHTML(card) {
+            return `
+                <div class="card-slot ${card.color}">
+                    <div>${card.rank}</div>
+                    <div class="card-center-suit">${card.suit}</div>
+                    <div style="transform: rotate(180deg); text-align: right;">${card.rank}</div>
+                </div>
+            `;
+        }
+
+        function renderTable(revealDealer) {
+            // Player
+            const pDiv = document.getElementById('player-cards');
+            pDiv.innerHTML = playerHand.map(c => createCardHTML(c)).join('');
+            document.getElementById('player-score').innerText = `(${calculateScore(playerHand)})`;
+
+            // House
+            const hDiv = document.getElementById('house-cards');
+            hDiv.innerHTML = '';
+            
+            houseHand.forEach((c, index) => {
+                if (index === 0 && !revealDealer) {
+                    // Hidden Card
+                    hDiv.innerHTML += `<div class="card-slot card-hidden"></div>`;
+                } else {
+                    hDiv.innerHTML += createCardHTML(c);
+                }
+            });
+        }
+
+        function toggleControls(active) {
+            document.getElementById('btn-hit').disabled = !active;
+            document.getElementById('btn-stand').disabled = !active;
+            document.getElementById('bet-controls').style.pointerEvents = active ? 'none' : 'auto';
+            document.getElementById('bet-controls').style.opacity = active ? '0.5' : '1';
+        }
+    </script>
+</body>
+</html>
