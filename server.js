@@ -17,16 +17,18 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log('✅ MongoDB Connected'))
     .catch(err => console.log('❌ DB Error:', err));
 
-// --- FILE SERVER HELPER ---
-// This reads files manually to bypass the ".vscode" folder security block
+// --- FILE HELPER ---
+// Reads files manually to bypass the ".vscode" folder block
 const renderPage = (res, fileName, type = 'text/html') => {
     const fullPath = path.join(__dirname, fileName);
+    
     if (fs.existsSync(fullPath)) {
         const content = fs.readFileSync(fullPath, 'utf8');
         res.setHeader('Content-Type', type);
         res.send(content);
     } else {
-        res.status(404).send(`Error: File ${fileName} not found`);
+        console.log(`❌ Missing File: ${fileName}`); // Alert in terminal
+        res.status(404).send(`Error: File ${fileName} not found. Check your terminal.`);
     }
 };
 
@@ -38,10 +40,12 @@ app.get('/login', (req, res) => renderPage(res, 'login.html'));
 app.get('/register', (req, res) => renderPage(res, 'register.html'));
 app.get('/dashboard', (req, res) => renderPage(res, 'dashboard.html'));
 
-// 2. CSS File
-app.get('/style.css', (req, res) => renderPage(res, 'style.css', 'text/css'));
+// 2. CSS File (Explicit Route)
+app.get('/style.css', (req, res) => {
+    renderPage(res, 'style.css', 'text/css');
+});
 
-// 3. Register Logic (Saves to Mongo)
+// 3. Handle Registration
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -49,12 +53,9 @@ app.post('/register', async (req, res) => {
         if (existingUser) return res.status(400).json({ success: false, message: "User exists" });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        
-        // Create user with 1000 credits
         const newUser = new User({ username, password: hashedPassword, credits: 1000 });
         await newUser.save();
         
-        // Send success + credits back to browser
         res.json({ success: true, username: username, credits: 1000 });
     } catch (err) {
         console.error(err);
@@ -62,7 +63,7 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// 4. Login Logic (Reads from Mongo)
+// 4. Handle Login
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -72,7 +73,6 @@ app.post('/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ success: false, message: "Invalid credentials" });
 
-        // Send success + credits back to browser
         res.json({ success: true, username: user.username, credits: user.credits });
     } catch (err) {
         console.error(err);
@@ -80,5 +80,16 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// --- STARTUP CHECK ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    
+    // Check if style.css exists
+    const cssPath = path.join(__dirname, 'style.css');
+    if (fs.existsSync(cssPath)) {
+        console.log("✅ FOUND: style.css");
+    } else {
+        console.log("❌ MISSING: style.css (Please rename your file to 'style.css')");
+    }
+});
