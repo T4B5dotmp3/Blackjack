@@ -5,6 +5,43 @@
     <title>Play Poker</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* --- CRITICAL CSS FIXES --- */
+        /* This ensures cards are always visible, even if style.css fails */
+        .card-slot {
+            width: 60px;
+            height: 90px;
+            background-color: white;
+            border-radius: 5px;
+            border: 2px solid #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: black; /* Default color */
+        }
+        
+        /* Red cards (Hearts/Diamonds) */
+        .card-red { color: red; border-color: red; }
+        
+        /* Black cards (Spades/Clubs) */
+        .card-black { color: black; border-color: black; }
+
+        /* THE BACK OF THE CARD (Hidden) */
+        .card-hidden {
+            background: repeating-linear-gradient(
+                45deg,
+                #606dbc,
+                #606dbc 10px,
+                #465298 10px,
+                #465298 20px
+            );
+            border: 2px solid #fff;
+            color: transparent !important; /* Hide any text inside */
+        }
+
+        /* Input and Button Styling */
         .bet-input {
             width: 80px;
             padding: 10px;
@@ -16,9 +53,8 @@
             font-weight: bold;
             font-size: 1.1rem;
         }
-        /* Make the Deal button stand out */
         .btn-deal-start {
-            background-color: #28a745; /* Green */
+            background-color: #28a745;
             color: white;
             font-weight: bold;
             padding: 10px 20px;
@@ -27,9 +63,7 @@
             cursor: pointer;
             font-size: 1rem;
         }
-        .btn-deal-start:hover {
-            background-color: #218838;
-        }
+        .btn-deal-start:hover { background-color: #218838; }
     </style>
 </head>
 <body class="poker-body">
@@ -59,7 +93,6 @@
                 <div id="betting-area" style="display: flex; gap: 10px; align-items: center;">
                     <span style="color: #ffd700; font-weight: bold;">Bet: $</span>
                     <input type="number" id="bet-amount" class="bet-input" value="10" min="1" onkeydown="if(event.key==='Enter') startGame()">
-                    
                     <button class="btn-deal-start" onclick="startGame()">DEAL HAND</button>
                 </div>
 
@@ -90,6 +123,7 @@
     </div>
 
     <script>
+        // --- SETUP ---
         const suits = ['♥', '♦', '♣', '♠'];
         const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         let deck = [], playerHand = [], houseHand = [], community = [];
@@ -97,10 +131,9 @@
         
         let balance = parseInt(localStorage.getItem('credits')) || 0;
         const user = localStorage.getItem('username') || 'Guest';
-
         document.getElementById('username-btn').innerText = user;
 
-        // 1. FETCH REAL BALANCE ON LOAD
+        // Fetch Real Balance
         fetchUserBalance();
 
         async function fetchUserBalance() {
@@ -120,7 +153,6 @@
             } catch (e) { console.log("Error fetching balance:", e); }
         }
 
-        // --- DECK LOGIC ---
         function createDeck() {
             deck = [];
             for(let s of suits) {
@@ -133,22 +165,18 @@
 
         function draw() { return deck.pop(); }
 
-        // --- MAIN GAME START ---
+        // --- GAME LOGIC ---
         function startGame() {
-            // Get the value from the input box
             const betInput = document.getElementById('bet-amount');
             let bet = parseInt(betInput.value);
 
-            // Validation
-            if (isNaN(bet) || bet <= 0) { alert("Please enter a valid bet amount!"); return; }
-            if (balance < bet) { alert("You don't have enough credits!"); return; }
+            if (isNaN(bet) || bet <= 0) { alert("Invalid bet!"); return; }
+            if (balance < bet) { alert("Not enough credits!"); return; }
 
-            // Logic
-            pot = bet * 2; // House matches
+            pot = bet * 2;
             stage = 0;
-            updateServerStats(bet, 0); // Deduct money immediately
+            updateServerStats(bet, 0);
 
-            // Setup Cards
             createDeck();
             playerHand = [draw(), draw()];
             houseHand = [draw(), draw()];
@@ -156,43 +184,29 @@
             
             // UI Switches
             document.getElementById('game-message').style.display = 'none';
-            document.getElementById('betting-area').style.display = 'none'; // Hide input
-            document.getElementById('game-buttons').style.display = 'flex'; // Show controls
+            document.getElementById('betting-area').style.display = 'none';
+            document.getElementById('game-buttons').style.display = 'flex';
             
-            // Reset House Display
+            // RESET HOUSE CARDS TO "HIDDEN"
+            // The .card-hidden CSS class above ensures these are visible as "Card Backs"
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
 
             renderTable();
         }
 
-        // --- GAME ACTIONS ---
         function raise() {
-            // Raising costs the same amount as the initial bet for simplicity in this version
-            // Or we can ask for another input. For now, let's make it a fixed Raise of $10 or match initial bet.
-            // Let's use the input value that started the game
             const initialBet = parseInt(document.getElementById('bet-amount').value);
-            
             if (balance < initialBet) { alert("Not enough to raise!"); return; }
-
             pot += (initialBet * 2); 
             updateServerStats(initialBet, 0);
             nextStage();
         }
 
         function nextStage() {
-            if (stage === 0) { // Flop
-                community.push(draw(), draw(), draw()); 
-                stage++; 
-            }
-            else if (stage === 1 || stage === 2) { // Turn & River
-                community.push(draw()); 
-                stage++; 
-            }
-            else { 
-                endGame(); 
-                return; 
-            }
+            if (stage === 0) { community.push(draw(), draw(), draw()); stage++; }
+            else if (stage === 1 || stage === 2) { community.push(draw()); stage++; }
+            else { endGame(); return; }
             renderTable();
         }
 
@@ -201,10 +215,11 @@
             resetGameUI();
         }
 
-        // --- END GAME & EVALUATION ---
         function endGame() {
+            // REVEAL HOUSE CARDS
+            // This replaces the "Hidden" divs with actual card data
             const houseDiv = document.getElementById('house-cards');
-            houseDiv.innerHTML = '';
+            houseDiv.innerHTML = ''; 
             houseHand.forEach(c => houseDiv.appendChild(createCardHTML(c)));
 
             const playerScore = evaluateHand([...playerHand, ...community]);
@@ -222,7 +237,6 @@
             resetGameUI();
         }
 
-        // Weighted Scoring Logic (Ace > King)
         function evaluateHand(cards) {
             let values = cards.map(c => ranks.indexOf(c.rank)).sort((a,b) => b-a);
             let score = 0;
@@ -241,10 +255,9 @@
             return score;
         }
 
-        // --- UI HELPERS ---
         function resetGameUI() {
-            document.getElementById('betting-area').style.display = 'flex'; // Show bet input again
-            document.getElementById('game-buttons').style.display = 'none'; // Hide game controls
+            document.getElementById('betting-area').style.display = 'flex';
+            document.getElementById('game-buttons').style.display = 'none';
         }
 
         function showMessage(msg, color) {
@@ -273,7 +286,6 @@
         function updateUI() {
             document.getElementById('pot-display').innerText = pot;
             document.getElementById('balance-display').innerText = balance;
-            localStorage.setItem('credits', balance);
         }
 
         function createCardHTML(card) {
