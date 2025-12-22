@@ -90,7 +90,6 @@ body.dashboard-body {
     color: white;
 }
 
-/* --- HEADER ALIGNMENT (Flexbox Fix) --- */
 .navbar {
     background-color: black;
     padding: 10px 30px;
@@ -134,7 +133,6 @@ body.dashboard-body {
     line-height: 1;
 }
 
-/* Specific Colors */
 .credits-badge {
     background-color: #ffd700; /* Gold */
     color: black;
@@ -158,7 +156,6 @@ body.dashboard-body {
     transform: translateY(-1px);
 }
 
-/* --- DASHBOARD CARDS --- */
 .game-container {
     display: flex;
     justify-content: center;
@@ -245,7 +242,6 @@ body.dashboard-body {
     margin: 10px 0;
 }
 
-/* Payment Layout */
 .payment-container {
     display: flex;
     justify-content: center;
@@ -308,7 +304,7 @@ body.dashboard-body {
 }
 
 /* =========================================
-   5. POKER TABLE
+   5. POKER TABLE (UPDATED FOR CONTROLS)
    ========================================= */
 .poker-body {
     background-color: #333;
@@ -346,7 +342,7 @@ body.dashboard-body {
     border-radius: 15px;
 }
 
-/* CSS Playing Cards */
+/* --- PLAYING CARDS --- */
 .card-slot {
     width: 80px;
     height: 120px;
@@ -364,44 +360,20 @@ body.dashboard-body {
     color: black;
 }
 
-.card-red { color: #d00; } 
-.card-black { color: #000; }
+.card-red { color: #d00; border-color: #d00; } 
+.card-black { color: #000; border-color: black; }
 
 .card-hidden {
     background-color: #777;
-    background-image: repeating-linear-gradient(45deg, #666 0, #666 10px, #777 0, #777 20px);
-    border: 2px solid #444;
+    background-image: repeating-linear-gradient(45deg, #606dbc 0, #606dbc 10px, #465298 10px, #465298 20px);
+    border: 2px solid white;
+    color: transparent !important;
 }
 
 .card-center-suit {
     align-self: center;
     font-size: 2.5rem;
 }
-
-.action-controls {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.poker-btn {
-    padding: 10px 20px;
-    border-radius: 5px;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 1rem;
-    color: white;
-}
-
-.btn-raise { background-color: #555; }
-.btn-check { background-color: #555; }
-.btn-fold { background-color: #8b3a3a; width: 100%; margin-top: 5px; }
-.btn-deal { background-color: #ffcc00; color: black; margin-top: 10px; display: none; }
-
-.poker-btn:hover { opacity: 0.8; }
-.poker-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .section-label {
     background-color: rgba(0,0,0,0.5);
@@ -424,6 +396,69 @@ body.dashboard-body {
     color: gold;
     text-align: center;
 }
+
+/* --- NEW CONTROLS BAR (The layout fix) --- */
+.controls-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px 25px;
+    border-radius: 15px;
+    border: 1px solid #444;
+    min-width: 300px;
+}
+
+.bet-label {
+    color: #ffd700; 
+    font-weight: bold; 
+    font-size: 1.1rem;
+}
+
+.bet-input {
+    width: 80px;
+    padding: 12px;
+    background-color: #222;
+    border: 2px solid #ffd700;
+    color: #ffd700;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 5px;
+}
+
+.poker-btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    transition: 0.2s;
+    text-transform: uppercase;
+    margin-top: 0; /* Reset margins */
+}
+
+.poker-btn:hover { opacity: 0.9; }
+.poker-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Specific Button Colors */
+.btn-deal { 
+    background-color: #28a745; 
+    box-shadow: 0 4px 0 #1e7e34;
+    color: white;
+    display: block; /* Ensure it is visible */
+}
+.btn-deal:hover { background-color: #218838; }
+.btn-deal:active { box-shadow: none; transform: translateY(4px); }
+
+.btn-raise { background-color: #ffc107; color: black; } 
+.btn-check { background-color: #17a2b8; } 
+.btn-fold { background-color: #dc3545; }
+
 
 /* =========================================
    6. ACCOUNT PAGE STYLES
@@ -513,7 +548,7 @@ body.dashboard-body {
 
 /* --- BLACKJACK SPECIFIC STYLES --- */
 .blackjack-center-rules {
-    border: 2px solid #d4af37; /* Gold Border */
+    border: 2px solid #d4af37;
     padding: 20px;
     border-radius: 10px;
     color: #d4af37;
@@ -541,7 +576,7 @@ body.dashboard-body {
     color: black;
     border: 3px solid #ccc;
     font-weight: bold;
-    border-radius: 50%; /* Circle chips */
+    border-radius: 50%;
     width: 60px;
     height: 60px;
     cursor: pointer;
@@ -560,17 +595,16 @@ body.dashboard-body {
     gap: 20px;
 }
 
-.btn-hit { background-color: #5bc0de; color: white; } /* Blue */
-.btn-stand { background-color: #d9534f; color: white; } /* Red */
+.btn-hit { background-color: #5bc0de; color: white; } 
+.btn-stand { background-color: #d9534f; color: white; } 
 
-/* The BLACKJACK Popup Animation */
 .bj-popup {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
     background-color: rgba(0, 0, 0, 0.9);
-    color: #ffd700; /* Gold */
+    color: #ffd700; 
     padding: 30px 60px;
     border: 5px solid #ffd700;
     border-radius: 20px;

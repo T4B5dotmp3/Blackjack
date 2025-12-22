@@ -4,51 +4,6 @@
     <meta charset="UTF-8">
     <title>Play Blackjack</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* --- CSS SAFETY BLOCK --- */
-        .bet-input {
-            width: 100px;
-            padding: 10px;
-            border-radius: 5px;
-            border: none;
-            text-align: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-        .rebet-btn {
-            background-color: #ffd700;
-            color: black;
-            border: 2px solid #d4af37;
-        }
-        /* Ensure card backs are visible */
-        .card-hidden {
-            background: repeating-linear-gradient(
-                45deg,
-                #606dbc,
-                #606dbc 10px,
-                #465298 10px,
-                #465298 20px
-            );
-            color: transparent !important;
-            border: 2px solid #fff;
-        }
-        /* Basic card shape if style.css fails */
-        .card-slot {
-            min-width: 60px;
-            min-height: 90px;
-            background-color: white;
-            border-radius: 5px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 5px;
-            font-weight: bold;
-            font-size: 1.2rem;
-            border: 2px solid #333;
-        }
-        .card-red { color: red; border-color: red; }
-        .card-black { color: black; border-color: black; }
-    </style>
 </head>
 <body class="poker-body">
 
@@ -90,11 +45,11 @@
         <div class="betting-controls" id="bet-controls">
             <input type="number" id="bet-input" class="bet-input" placeholder="Amount" value="10">
             
-            <button class="bet-btn" style="width: auto; border-radius: 10px; padding: 0 15px;" onclick="startCustomGame()">
+            <button class="bj-btn-primary" onclick="startCustomGame()">
                 Deal Hand
             </button>
             
-            <button id="btn-rebet" class="bet-btn rebet-btn" style="width: auto; border-radius: 10px; padding: 0 15px; display: none;" onclick="rebet()">
+            <button id="btn-rebet" class="bj-btn-primary rebet-btn" style="display: none;" onclick="rebet()">
                 Rebet & Deal
             </button>
         </div>
@@ -106,21 +61,18 @@
     </div>
 
     <script>
-        // --- CONFIG ---
         const suits = ['♥', '♦', '♣', '♠'];
         const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         
         let deck = [], playerHand = [], houseHand = [];
         let currentBet = 0, lastBet = 0;
-        
-        // Initial Local Load
         let balance = parseInt(localStorage.getItem('credits')) || 0;
         const user = localStorage.getItem('username') || 'Guest';
         let gameOver = true;
 
         document.getElementById('username-btn').innerText = user;
 
-        // FETCH REAL BALANCE IMMEDIATELY
+        // FETCH REAL BALANCE
         fetchUserBalance();
 
         async function fetchUserBalance() {
@@ -153,7 +105,6 @@
 
         function draw() { return deck.pop(); }
 
-        // --- GAME LOGIC ---
         function startCustomGame() {
             const val = parseInt(document.getElementById('bet-input').value);
             if (!val || val <= 0) return alert("Enter a valid amount");
@@ -175,19 +126,18 @@
             gameOver = false;
             createDeck();
             
-            updateServerStats(amount, 0); // Deduct bet immediately
+            updateServerStats(amount, 0);
 
             playerHand = [draw(), draw()];
             houseHand = [draw(), draw()];
             
-            // UI Reset
             document.getElementById('game-message').style.display = 'none';
             document.getElementById('bj-popup').classList.remove('show');
             document.getElementById('current-bet').innerText = currentBet;
-            document.getElementById('house-score').innerText = "(?)"; // Reset House Score to hidden
+            document.getElementById('house-score').innerText = "(?)";
             
             toggleControls(true);
-            renderTable(false); // False = Hide Dealer Card
+            renderTable(false);
 
             if (calculateScore(playerHand) === 21) setTimeout(() => handleBlackjack(), 500);
         }
@@ -206,7 +156,7 @@
                 houseHand.push(draw());
                 dScore = calculateScore(houseHand);
             }
-            renderTable(true); // True = Reveal Dealer
+            renderTable(true);
             determineWinner();
         }
 
@@ -258,7 +208,6 @@
             return score;
         }
 
-        // --- SERVER SYNC ---
         async function updateServerStats(bet, win) {
             const username = localStorage.getItem('username');
             try {
@@ -280,22 +229,16 @@
             return `<div class="card-slot ${card.color}"><div>${card.rank}</div><div class="card-center-suit">${card.suit}</div><div style="transform: rotate(180deg); text-align: right;">${card.rank}</div></div>`;
         }
 
-        // --- UPDATED RENDER FUNCTION ---
         function renderTable(revealDealer) {
-            // Render Player
             document.getElementById('player-cards').innerHTML = playerHand.map(createCardHTML).join('');
             document.getElementById('player-score').innerText = `(${calculateScore(playerHand)})`;
 
-            // Render House
             const hDiv = document.getElementById('house-cards');
             hDiv.innerHTML = '';
-            
-            // Logic for showing House Score
             const houseScoreEl = document.getElementById('house-score');
 
             houseHand.forEach((c, i) => {
                 if (i === 0 && !revealDealer) {
-                    // Hide the first card
                     hDiv.innerHTML += `<div class="card-slot card-hidden"></div>`;
                     houseScoreEl.innerText = "(?)"; 
                 } else {
@@ -303,7 +246,6 @@
                 }
             });
 
-            // If revealed, show the total score
             if (revealDealer) {
                 houseScoreEl.innerText = `(${calculateScore(houseHand)})`;
             }
