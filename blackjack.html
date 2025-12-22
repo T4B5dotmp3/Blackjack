@@ -5,6 +5,7 @@
     <title>Play Blackjack</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* --- CSS SAFETY BLOCK --- */
         .bet-input {
             width: 100px;
             padding: 10px;
@@ -19,6 +20,34 @@
             color: black;
             border: 2px solid #d4af37;
         }
+        /* Ensure card backs are visible */
+        .card-hidden {
+            background: repeating-linear-gradient(
+                45deg,
+                #606dbc,
+                #606dbc 10px,
+                #465298 10px,
+                #465298 20px
+            );
+            color: transparent !important;
+            border: 2px solid #fff;
+        }
+        /* Basic card shape if style.css fails */
+        .card-slot {
+            min-width: 60px;
+            min-height: 90px;
+            background-color: white;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border: 2px solid #333;
+        }
+        .card-red { color: red; border-color: red; }
+        .card-black { color: black; border-color: black; }
     </style>
 </head>
 <body class="poker-body">
@@ -27,7 +56,7 @@
         <div class="logo">Queen of Hearts Casino</div>
         <div class="user-controls">
             <span class="credits-badge">Bet: $<span id="current-bet">0</span></span>
-            <span class="credits-badge">Balance: $<span id="balance-display">0</span></span>
+            <span class="credits-badge">Balance: $<span id="balance-display">Loading...</span></span>
             <button id="username-btn" class="user-badge" onclick="window.location.href='/account'">Guest</button>
             <button class="logout-btn" onclick="window.location.href='/dashboard'">Exit</button>
         </div>
@@ -51,7 +80,7 @@
         </div>
 
         <div class="house-section">
-            <div class="section-label">The House</div>
+            <div class="section-label">The House <span id="house-score">(?)</span></div>
             <div style="display: flex; gap: 10px;" id="house-cards">
                 <div class="card-slot card-hidden"></div>
                 <div class="card-slot card-hidden"></div>
@@ -77,16 +106,39 @@
     </div>
 
     <script>
+        // --- CONFIG ---
         const suits = ['♥', '♦', '♣', '♠'];
         const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         
         let deck = [], playerHand = [], houseHand = [];
         let currentBet = 0, lastBet = 0;
+        
+        // Initial Local Load
         let balance = parseInt(localStorage.getItem('credits')) || 0;
+        const user = localStorage.getItem('username') || 'Guest';
         let gameOver = true;
 
-        document.getElementById('balance-display').innerText = balance;
-        document.getElementById('username-btn').innerText = localStorage.getItem('username') || 'Guest';
+        document.getElementById('username-btn').innerText = user;
+
+        // FETCH REAL BALANCE IMMEDIATELY
+        fetchUserBalance();
+
+        async function fetchUserBalance() {
+            if (user === 'Guest') return;
+            try {
+                const response = await fetch('/my-stats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    balance = data.credits;
+                    document.getElementById('balance-display').innerText = balance;
+                    localStorage.setItem('credits', balance);
+                }
+            } catch (e) { console.error("Sync error", e); }
+        }
 
         function createDeck() {
             deck = [];
@@ -101,7 +153,7 @@
 
         function draw() { return deck.pop(); }
 
-        // --- START GAME LOGIC ---
+        // --- GAME LOGIC ---
         function startCustomGame() {
             const val = parseInt(document.getElementById('bet-input').value);
             if (!val || val <= 0) return alert("Enter a valid amount");
@@ -116,14 +168,14 @@
             if (balance < amount) return alert("Not enough credits!");
 
             currentBet = amount;
-            lastBet = amount; // Save for Rebet
-            document.getElementById('btn-rebet').style.display = 'none'; // Hide Rebet while playing
+            lastBet = amount;
+            document.getElementById('btn-rebet').style.display = 'none';
 
             balance -= amount;
             gameOver = false;
             createDeck();
             
-            updateServerStats(amount, 0);
+            updateServerStats(amount, 0); // Deduct bet immediately
 
             playerHand = [draw(), draw()];
             houseHand = [draw(), draw()];
@@ -132,11 +184,11 @@
             document.getElementById('game-message').style.display = 'none';
             document.getElementById('bj-popup').classList.remove('show');
             document.getElementById('current-bet').innerText = currentBet;
+            document.getElementById('house-score').innerText = "(?)"; // Reset House Score to hidden
             
             toggleControls(true);
-            renderTable(false);
+            renderTable(false); // False = Hide Dealer Card
 
-            // Check BJ
             if (calculateScore(playerHand) === 21) setTimeout(() => handleBlackjack(), 500);
         }
 
@@ -154,7 +206,7 @@
                 houseHand.push(draw());
                 dScore = calculateScore(houseHand);
             }
-            renderTable(true);
+            renderTable(true); // True = Reveal Dealer
             determineWinner();
         }
 
@@ -194,7 +246,6 @@
 
             if (payout > 0) updateServerStats(0, payout);
             
-            // SHOW REBET BUTTON
             const rebetBtn = document.getElementById('btn-rebet');
             rebetBtn.style.display = 'inline-block';
             rebetBtn.innerText = `Rebet ($${lastBet})`;
@@ -207,6 +258,7 @@
             return score;
         }
 
+        // --- SERVER SYNC ---
         async function updateServerStats(bet, win) {
             const username = localStorage.getItem('username');
             try {
@@ -216,7 +268,11 @@
                     body: JSON.stringify({username, betAmount: bet, winAmount: win})
                 });
                 const data = await res.json();
-                if(data.success) { balance = data.credits; document.getElementById('balance-display').innerText = balance; }
+                if(data.success) { 
+                    balance = data.credits; 
+                    document.getElementById('balance-display').innerText = balance;
+                    localStorage.setItem('credits', balance);
+                }
             } catch(e){}
         }
 
@@ -224,23 +280,39 @@
             return `<div class="card-slot ${card.color}"><div>${card.rank}</div><div class="card-center-suit">${card.suit}</div><div style="transform: rotate(180deg); text-align: right;">${card.rank}</div></div>`;
         }
 
+        // --- UPDATED RENDER FUNCTION ---
         function renderTable(revealDealer) {
+            // Render Player
             document.getElementById('player-cards').innerHTML = playerHand.map(createCardHTML).join('');
             document.getElementById('player-score').innerText = `(${calculateScore(playerHand)})`;
 
+            // Render House
             const hDiv = document.getElementById('house-cards');
             hDiv.innerHTML = '';
+            
+            // Logic for showing House Score
+            const houseScoreEl = document.getElementById('house-score');
+
             houseHand.forEach((c, i) => {
-                if (i === 0 && !revealDealer) hDiv.innerHTML += `<div class="card-slot card-hidden"></div>`;
-                else hDiv.innerHTML += createCardHTML(c);
+                if (i === 0 && !revealDealer) {
+                    // Hide the first card
+                    hDiv.innerHTML += `<div class="card-slot card-hidden"></div>`;
+                    houseScoreEl.innerText = "(?)"; 
+                } else {
+                    hDiv.innerHTML += createCardHTML(c);
+                }
             });
+
+            // If revealed, show the total score
+            if (revealDealer) {
+                houseScoreEl.innerText = `(${calculateScore(houseHand)})`;
+            }
         }
 
         function toggleControls(active) {
             document.getElementById('btn-hit').disabled = !active;
             document.getElementById('btn-stand').disabled = !active;
             const ctrl = document.getElementById('bet-controls');
-            // Disable inputs while playing, enable when done
             ctrl.style.pointerEvents = active ? 'none' : 'auto';
             ctrl.style.opacity = active ? '0.5' : '1';
         }

@@ -5,21 +5,58 @@
     <title>Play Poker</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Styling for the custom bet input */
-        .bet-input {
-            width: 80px;
+        /* --- BUTTON & INPUT STYLING (Embedded to guarantee visibility) --- */
+        
+        /* The Container for Input + Buttons */
+        .controls-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            background: rgba(0,0,0,0.5);
             padding: 10px;
+            border-radius: 10px;
+        }
+
+        /* The Input Box */
+        .bet-input {
+            width: 100px;
+            padding: 12px;
             background-color: #222;
             border: 2px solid #ffd700;
             color: #ffd700;
             text-align: center;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: bold;
             border-radius: 5px;
-            margin-right: 10px;
         }
-        
-        /* Ensure card backs are visible even if CSS file misses them */
+
+        /* Standard Game Button */
+        .poker-btn {
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+        }
+
+        /* Specific Button Colors */
+        .btn-deal { background-color: #28a745; } /* GREEN */
+        .btn-deal:hover { background-color: #218838; }
+
+        .btn-raise { background-color: #ffc107; color: black; } /* YELLOW */
+        .btn-raise:hover { background-color: #e0a800; }
+
+        .btn-check { background-color: #17a2b8; } /* BLUE */
+        .btn-check:hover { background-color: #138496; }
+
+        .btn-fold { background-color: #dc3545; } /* RED */
+        .btn-fold:hover { background-color: #c82333; }
+
+        /* Card Backs */
         .card-hidden {
             background: repeating-linear-gradient(
                 45deg,
@@ -55,18 +92,17 @@
                 <div class="card-slot card-hidden"></div>
             </div>
 
-            <div class="action-controls" style="align-items: center;">
+            <div class="controls-bar">
+                <span style="color: #ffd700; font-weight: bold;">Amount: $</span>
                 
-                <div id="betting-controls" style="display: flex; align-items: center;">
-                    <span style="color: #ffd700; margin-right: 5px; font-weight: bold;">Bet: $</span>
-                    <input type="number" id="bet-input" class="bet-input" value="10" min="1">
-                    <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">DEAL HAND</button>
-                </div>
+                <input type="number" id="bet-input" class="bet-input" value="10" min="1">
+
+                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">PLACE BET & DEAL</button>
 
                 <div id="gameplay-buttons" style="display: none; gap: 10px;">
-                    <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()">Raise</button>
-                    <button class="poker-btn btn-check" id="btn-check" onclick="nextStage()">Check</button>
-                    <button class="poker-btn btn-fold" id="btn-fold" onclick="fold()">Fold</button>
+                    <button class="poker-btn btn-raise" onclick="raise()">BET / RAISE</button>
+                    <button class="poker-btn btn-check" onclick="nextStage()">CHECK</button>
+                    <button class="poker-btn btn-fold" onclick="fold()">FOLD</button>
                 </div>
             </div>
         </div>
@@ -88,8 +124,6 @@
         </div>
     </div>
 
-    <footer class="footer">Developed by T4B5</footer>
-
     <script>
         // --- CONFIG ---
         const suits = ['♥', '♦', '♣', '♠'];
@@ -102,8 +136,7 @@
         const user = localStorage.getItem('username') || 'Guest';
         document.getElementById('username-display').innerText = user;
 
-        // --- CRITICAL: FETCH REAL BALANCE FROM SERVER ---
-        // This ensures the balance is correct immediately upon loading the page
+        // FETCH REAL BALANCE IMMEDIATELY
         fetchUserBalance();
 
         async function fetchUserBalance() {
@@ -154,8 +187,8 @@
 
             // 5. UI Updates
             document.getElementById('game-message').style.display = 'none';
-            document.getElementById('betting-controls').style.display = 'none'; // Hide input
-            document.getElementById('gameplay-buttons').style.display = 'flex'; // Show game buttons
+            document.getElementById('btn-deal').style.display = 'none'; // Hide Start Button
+            document.getElementById('gameplay-buttons').style.display = 'flex'; // Show Game Buttons
             
             // 6. Deal Cards
             createDeck();
@@ -163,7 +196,6 @@
             houseHand = [draw(), draw()]; 
             community = [];
             
-            // Reset House visuals
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
             
@@ -185,9 +217,10 @@
         }
 
         function raise() {
-            // Use the amount in the input box for the raise
+            // Use the amount CURRENTLY in the input box
             const raiseAmount = parseInt(document.getElementById('bet-input').value);
             
+            if (isNaN(raiseAmount) || raiseAmount <= 0) { alert("Enter a valid amount to bet/raise!"); return; }
             if (balance < raiseAmount) { alert("Not enough money to raise!"); return; }
             
             pot += (raiseAmount * 2); // House matches raise
@@ -197,18 +230,16 @@
         }
 
         function fold() {
-            showMessage("You Folded.", "red");
+            showMessage("You Folded.", "#ff4444");
             resetGameUI();
         }
 
         // --- SHOWDOWN LOGIC ---
         function endGame() {
-            // Reveal House Cards
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = '';
             houseHand.forEach(c => houseDiv.appendChild(createCardHTML(c)));
 
-            // Calculate Scores
             const playerScore = evaluateHand([...playerHand, ...community]);
             const houseScore = evaluateHand([...houseHand, ...community]);
 
@@ -225,26 +256,21 @@
             resetGameUI();
         }
 
-        // --- ADVANCED HAND EVALUATOR (Base 16 Weighted) ---
-        // This fixes the bug where "Queen High" beats "Ace High"
+        // --- EVALUATOR ---
         function evaluateHand(cards) {
             let values = cards.map(c => ranks.indexOf(c.rank)).sort((a,b) => b-a);
-            
-            // High Card Score (Weighted so Ace is always > King)
             let score = 0;
+            // Weighted High Card
             for (let i = 0; i < Math.min(5, values.length); i++) {
                 score += values[i] * Math.pow(16, 4 - i);
             }
-
+            // Pair/Trip Bonuses
             const rankCounts = {};
             const suitCounts = {};
-
             cards.forEach(c => {
                 rankCounts[c.rank] = (rankCounts[c.rank] || 0) + 1;
                 suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
             });
-
-            // Add massive bonuses for Pairs/Trips so they always beat High Cards
             for(let r in rankCounts) {
                 const count = rankCounts[r];
                 const val = ranks.indexOf(r);
@@ -252,14 +278,13 @@
                 if (count === 3) score += 5000000 + (val * 10000);
                 if (count === 4) score += 20000000 + (val * 10000);
             }
-
             for(let s in suitCounts) {
-                if (suitCounts[s] >= 5) score += 10000000; // Flush
+                if (suitCounts[s] >= 5) score += 10000000;
             }
             return score;
         }
 
-        // --- RENDERING & SERVER HELPERS ---
+        // --- HELPERS ---
         async function updateServerStats(bet, win) {
             const username = localStorage.getItem('username');
             const response = await fetch('/game-result', {
@@ -275,31 +300,14 @@
         }
 
         function createCardHTML(card) {
-            const div = document.createElement('div');
-            div.className = `card-slot ${card.color}`;
-            div.innerHTML = `
-                <div>${card.rank}</div>
-                <div class="card-center-suit">${card.suit}</div>
-                <div style="transform: rotate(180deg); text-align: right;">${card.rank}</div>
-            `;
-            return div;
+            return `<div class="card-slot ${card.color}"><div>${card.rank}</div><div class="card-center-suit">${card.suit}</div><div style="transform: rotate(180deg); text-align: right;">${card.rank}</div></div>`;
         }
 
         function renderTable() {
-            const pDiv = document.getElementById('player-cards');
-            pDiv.innerHTML = '';
-            playerHand.forEach(c => pDiv.appendChild(createCardHTML(c)));
-
-            const cDiv = document.getElementById('community-cards');
-            cDiv.innerHTML = '';
-            community.forEach(c => cDiv.appendChild(createCardHTML(c)));
-            
-            for(let i=0; i < (5 - community.length); i++) {
-                const empty = document.createElement('div');
-                empty.className = 'card-slot card-hidden';
-                empty.style.opacity = "0.5";
-                cDiv.appendChild(empty);
-            }
+            document.getElementById('player-cards').innerHTML = playerHand.map(createCardHTML).join('');
+            document.getElementById('community-cards').innerHTML = community.map(createCardHTML).join('');
+            for(let i=0; i < (5 - community.length); i++) 
+                document.getElementById('community-cards').innerHTML += `<div class="card-slot card-hidden" style="opacity:0.5"></div>`;
         }
 
         function updateUI() {
@@ -317,8 +325,8 @@
         }
 
         function resetGameUI() {
-            document.getElementById('betting-controls').style.display = 'flex'; // Show input again
-            document.getElementById('gameplay-buttons').style.display = 'none'; // Hide checks/folds
+            document.getElementById('btn-deal').style.display = 'block'; // Show Deal
+            document.getElementById('gameplay-buttons').style.display = 'none'; // Hide Game Buttons
         }
     </script>
 </body>
