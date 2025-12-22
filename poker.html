@@ -12,7 +12,7 @@
         <div class="user-controls">
             <span class="credits-badge">Pot: $<span id="pot-display">0</span></span>
             <span class="credits-badge">Balance: $<span id="balance-display">0</span></span>
-            <span class="user-badge" id="username-display">Guest</span>
+            <button id="username-btn" class="user-badge" onclick="window.location.href='/account'">Guest</button>
             <button class="logout-btn" onclick="window.location.href='/dashboard'">Exit</button>
         </div>
     </nav>
@@ -69,7 +69,7 @@
         // Load User Info
         let balance = parseInt(localStorage.getItem('credits')) || 0;
         const user = localStorage.getItem('username') || 'Guest';
-        document.getElementById('username-display').innerText = user;
+        document.getElementById('username-btn').innerText = user;
         updateUI();
         
         // Show "Deal" button initially
@@ -91,17 +91,15 @@
 
         // --- GAME ACTIONS ---
         function startGame() {
-            // Updated: Check for $10 instead of $20
             if (balance < 10) { alert("Need $10 to play!"); return; }
             
             // UI Updates
-            pot = 20; // You put $10, House puts $10
+            pot = 20; 
             stage = 0;
             document.getElementById('game-message').style.display = 'none';
             document.getElementById('btn-deal').style.display = 'none';
             
-            // --- SERVER SYNC: Record the $10 Bet ---
-            // We tell server: "I bet 10, I won 0"
+            // Server Sync
             updateServerStats(10, 0); 
 
             // Deck Logic
@@ -110,7 +108,6 @@
             houseHand = [draw(), draw()]; 
             community = [];
             
-            // Force House cards to visually reset to hidden
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = `
                 <div class="card-slot card-hidden"></div>
@@ -119,7 +116,6 @@
             
             toggleGameButtons(true);
             renderTable();
-            // Note: Balance updates automatically when updateServerStats returns
         }
 
         function nextStage() {
@@ -137,14 +133,9 @@
         }
 
         function raise() {
-            // Updated: Check for $10 raise
             if (balance < 10) { alert("Not enough money!"); return; }
-            
-            pot += 20; // You add 10, House adds 10
-            
-            // --- SERVER SYNC: Record the $10 Raise ---
+            pot += 20; 
             updateServerStats(10, 0); 
-            
             nextStage();
         }
 
@@ -166,71 +157,81 @@
 
             if (playerScore > houseScore) {
                 showMessage(`You Win $${pot}!`, "#ffd700");
-                // --- SERVER SYNC: Record the WIN ---
-                // Tell server: "I bet 0 (already bet), I won POT"
                 updateServerStats(0, pot); 
             } else if (houseScore > playerScore) {
                 showMessage("House Wins.", "#ff4444");
-                // No update needed, money was already lost during betting
             } else {
                 showMessage("Split Pot.", "white");
-                // Return half the pot
                 updateServerStats(0, pot / 2);
             }
             
             resetGameUI();
         }
 
-        // --- HAND EVALUATOR (Weighted Pairs) ---
+        // --- IMPROVED HAND EVALUATOR (Fixes Ace vs Queen bug) ---
         function evaluateHand(cards) {
+            // 1. Convert cards to numerical values (2=0, ... A=12)
+            let values = cards.map(c => ranks.indexOf(c.rank));
+            
+            // 2. Sort values DESCENDING (High cards first: A, K, Q...)
+            values.sort((a, b) => b - a);
+
+            // 3. Calculate "High Card" Score (Weighted Sum)
+            // We take the top 5 cards. We multiply the highest by a huge number.
+            // This ensures an Ace (12) is ALWAYS worth more than a King (11) + lower cards.
             let score = 0;
+            // Using Base 16 weighting ensures no overlap
+            for (let i = 0; i < Math.min(5, values.length); i++) {
+                score += values[i] * Math.pow(16, 4 - i);
+            }
+
+            // 4. Add Bonuses for Pairs, Trips, Flush
             const rankCounts = {};
             const suitCounts = {};
-
+            
             cards.forEach(c => {
                 rankCounts[c.rank] = (rankCounts[c.rank] || 0) + 1;
                 suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
-                score += ranks.indexOf(c.rank); // Tie-breaker points
             });
 
             for(let r in rankCounts) {
                 const count = rankCounts[r];
-                const rankValue = ranks.indexOf(r);
+                const rValue = ranks.indexOf(r);
                 
-                if (count === 2) score += 1000 + (rankValue * 50);
-                if (count === 3) score += 10000 + (rankValue * 50);
-                if (count === 4) score += 100000 + (rankValue * 50);
+                if (count === 2) score += 1000000 + (rValue * 10000); // Pair
+                if (count === 3) score += 5000000 + (rValue * 10000); // Trips
+                if (count === 4) score += 20000000 + (rValue * 10000); // Quads
             }
 
             for(let s in suitCounts) {
-                if (suitCounts[s] >= 5) score += 50000;
+                if (suitCounts[s] >= 5) score += 10000000; // Flush beats Trips
             }
+            
             return score;
         }
 
-        // --- RENDERING & SERVER HELPERS ---
-        
+        // --- SERVER SYNC ---
         async function updateServerStats(bet, win) {
             const username = localStorage.getItem('username');
-            
-            // Send game result to server so it updates 'totalWon', 'totalLost', etc.
-            const response = await fetch('/game-result', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    username: username, 
-                    betAmount: bet, 
-                    winAmount: win 
-                })
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                balance = result.credits; // Update local balance to match server
-                updateUI();
-            }
+            try {
+                const response = await fetch('/game-result', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        username: username, 
+                        betAmount: bet, 
+                        winAmount: win 
+                    })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    balance = result.credits;
+                    updateUI();
+                }
+            } catch(e) { console.log(e); }
         }
 
+        // --- RENDERING ---
         function createCardHTML(card) {
             const div = document.createElement('div');
             div.className = `card-slot ${card.color}`;
@@ -243,12 +244,10 @@
         }
 
         function renderTable() {
-            // Render Player
             const pDiv = document.getElementById('player-cards');
             pDiv.innerHTML = '';
             playerHand.forEach(c => pDiv.appendChild(createCardHTML(c)));
 
-            // Render Community
             const cDiv = document.getElementById('community-cards');
             cDiv.innerHTML = '';
             community.forEach(c => cDiv.appendChild(createCardHTML(c)));
