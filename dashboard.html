@@ -8,22 +8,18 @@
 <body class="dashboard-body">
 
     <nav class="navbar">
-    <div class="logo">Queen of Hearts Casino</div>
-    
-    <div class="user-controls">
-        <span class="credits-badge">
-            Balance: $<span id="credits-display">0</span>
-        </span>
-        
-        <button id="username-btn" class="user-badge" onclick="window.location.href='/account'">
-            Guest
-        </button>
-        
-        <button class="logout-btn" onclick="logout()">
-            Logout
-        </button>
-    </div>
-</nav>
+        <div class="logo">Queen of Hearts Casino</div>
+        <div class="user-controls">
+            <span class="credits-badge">Balance: $<span id="credits-display">Loading...</span></span>
+            
+            <button id="username-btn" class="user-badge" onclick="window.location.href='/account'">
+                Guest
+            </button>
+            
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
     <div class="game-container">
         <div class="card" onclick="window.location.href='/buy-credits'">
             <h2>Buy Credits!</h2>
@@ -35,7 +31,7 @@
             <p style="color: #ddd; font-size: 0.9rem;">Texas Hold'em</p>
         </div>
 
-      <div class="card" onclick="window.location.href='/blackjack'">
+        <div class="card" onclick="window.location.href='/blackjack'">
             <h2>Play Blackjack</h2>
             <p style="color: #ddd; font-size: 0.9rem;">Beat the dealer</p>
         </div>
@@ -44,25 +40,54 @@
     <footer class="footer">Developed by T4B5</footer>
 
     <script>
-        // 1. Get Data from Local Storage
-        const user = localStorage.getItem('username');
-        const credits = localStorage.getItem('credits');
+        const username = localStorage.getItem('username');
 
-        // 2. Set the Button Text to the Username
-        if (user) {
-            document.getElementById('username-btn').innerText = user;
+        // 1. Set Username Immediately
+        if (username) {
+            document.getElementById('username-btn').innerText = username;
         }
 
-        // 3. Set the Balance
-        if (credits) {
-            document.getElementById('credits-display').innerText = credits;
+        // 2. FETCH REAL BALANCE FROM SERVER
+        // This fixes the issue where balance doesn't update after a game
+        async function fetchUserBalance() {
+            if (!username) return;
+
+            try {
+                const response = await fetch('/my-stats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update the Screen
+                    document.getElementById('credits-display').innerText = data.credits;
+                    // Update Local Storage for other pages to use
+                    localStorage.setItem('credits', data.credits);
+                }
+            } catch (err) {
+                console.error("Failed to fetch balance", err);
+                // Fallback to local storage if server fails
+                document.getElementById('credits-display').innerText = localStorage.getItem('credits') || 0;
+            }
         }
 
-        // 4. Logout Logic
         function logout() {
             localStorage.clear(); 
             window.location.href = '/login'; 
         }
+
+        // Run immediately when page loads
+        fetchUserBalance();
+        
+        // Run again if the user comes back to this tab
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                fetchUserBalance();
+            }
+        };
     </script>
 </body>
 </html>

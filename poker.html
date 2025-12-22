@@ -23,7 +23,7 @@
         <div class="logo">Queen of Hearts Poker</div>
         <div class="user-controls">
             <span class="credits-badge">Pot: $<span id="pot-display">0</span></span>
-            <span class="credits-badge">Balance: $<span id="balance-display">0</span></span>
+            <span class="credits-badge">Balance: $<span id="balance-display">Loading...</span></span>
             <button id="username-btn" class="user-badge" onclick="window.location.href='/account'">Guest</button>
             <button class="logout-btn" onclick="window.location.href='/dashboard'">Exit</button>
         </div>
@@ -72,11 +72,32 @@
         const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         let deck = [], playerHand = [], houseHand = [], community = [];
         let stage = 0, pot = 0;
+        
+        // Initial load from storage (fallback)
         let balance = parseInt(localStorage.getItem('credits')) || 0;
         const user = localStorage.getItem('username') || 'Guest';
 
         document.getElementById('username-btn').innerText = user;
-        updateUI();
+        // Don't just update UI, fetch the real data immediately
+        fetchUserBalance();
+
+        // --- NEW FUNCTION: SYNC BALANCE ON LOAD ---
+        async function fetchUserBalance() {
+            if (!user) return;
+            try {
+                const response = await fetch('/my-stats', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    balance = data.credits; // Update the global variable used for betting
+                    localStorage.setItem('credits', balance); // Save for later
+                    updateUI(); // Update the screen
+                }
+            } catch (e) { console.log("Error fetching balance:", e); }
+        }
 
         function createDeck() {
             deck = [];
@@ -111,7 +132,7 @@
             // UI Reset
             document.getElementById('game-message').style.display = 'none';
             document.getElementById('btn-deal').style.display = 'none';
-            betInput.disabled = true; // Lock bet amount during hand
+            betInput.disabled = true; 
             
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
@@ -183,11 +204,10 @@
             return score;
         }
 
-        // --- UI HELPER ---
         function resetGameUI() {
             toggleGameButtons(false);
             document.getElementById('btn-deal').style.display = 'inline-block';
-            document.getElementById('bet-amount').disabled = false; // Unlock input
+            document.getElementById('bet-amount').disabled = false;
         }
 
         function toggleGameButtons(active) {
@@ -204,13 +224,17 @@
                     body: JSON.stringify({username: user, betAmount: bet, winAmount: win})
                 });
                 const data = await res.json();
-                if(data.success) { balance = data.credits; updateUI(); }
+                if(data.success) { 
+                    balance = data.credits; 
+                    updateUI(); 
+                }
             } catch(e){}
         }
 
         function updateUI() {
             document.getElementById('pot-display').innerText = pot;
             document.getElementById('balance-display').innerText = balance;
+            localStorage.setItem('credits', balance);
         }
 
         function createCardHTML(card) {
