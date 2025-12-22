@@ -12,19 +12,16 @@
         <div class="user-controls">
             <span class="credits-badge">Pot: $<span id="pot-display">0</span></span>
             <span class="credits-badge">Balance: $<span id="balance-display">Loading...</span></span>
-            <span class="user-badge" id="username-display">Guest</span>
             <button class="logout-btn" onclick="window.location.href='/dashboard'">Exit</button>
         </div>
     </nav>
 
     <div class="poker-table">
-        
         <div id="game-message" class="message-overlay">You Win!</div>
 
         <div class="cards-area">
-            
             <div class="player-section">
-                <div class="section-label">Your Hand</div>
+                <div class="section-label">You</div>
                 <div id="player-cards" class="hand-container">
                     <div class="card-slot card-hidden"></div>
                     <div class="card-slot card-hidden"></div>
@@ -32,15 +29,15 @@
             </div>
 
             <div class="board-section" id="community-cards">
-                <div class="card-slot card-placeholder"></div>
-                <div class="card-slot card-placeholder"></div>
-                <div class="card-slot card-placeholder"></div>
-                <div class="card-slot card-placeholder"></div>
-                <div class="card-slot card-placeholder"></div>
+                <div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>
+                <div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>
+                <div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>
+                <div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>
+                <div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>
             </div>
 
             <div class="house-section">
-                <div class="section-label">The House</div>
+                <div class="section-label">House</div>
                 <div id="house-cards" class="hand-container">
                     <div class="card-slot card-hidden"></div>
                     <div class="card-slot card-hidden"></div>
@@ -50,223 +47,159 @@
 
         <div class="controls-area">
             <div class="controls-bar">
-                <span class="bet-label">Bet: $</span>
+                <span style="color: gold; font-weight: bold;">Bet: $</span>
+                <input type="number" id="bet-input" class="bet-input" value="10">
+                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">DEAL</button>
                 
-                <input type="number" id="bet-input" class="bet-input" value="10" min="1">
-
-                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">DEAL HAND</button>
-
-                <div id="gameplay-buttons" style="display: none; gap: 15px;">
+                <div id="game-buttons" style="display:none; gap:10px;">
                     <button class="poker-btn btn-raise" onclick="raise()">RAISE</button>
                     <button class="poker-btn btn-check" onclick="nextStage()">CHECK</button>
                     <button class="poker-btn btn-fold" onclick="fold()">FOLD</button>
                 </div>
             </div>
         </div>
-
     </div>
 
     <script>
         const suits = ['♥', '♦', '♣', '♠'];
         const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-        let deck = [], playerHand = [], houseHand = [], community = [];
-        let stage = 0, pot = 0;
-        let initialBetAmount = 0;
-        
-        let balance = parseInt(localStorage.getItem('credits')) || 0;
+        let deck = [], playerHand = [], houseHand = [], community = [], stage = 0, pot = 0;
+        let initialBet = 0;
         const user = localStorage.getItem('username') || 'Guest';
-        document.getElementById('username-display').innerText = user;
 
-        fetchUserBalance();
-
-        async function fetchUserBalance() {
-            if (user === 'Guest') return;
-            try {
-                const response = await fetch('/my-stats', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    balance = data.credits;
-                    updateUI();
-                }
-            } catch (e) { console.error("Sync error", e); }
+        fetchBalance();
+        async function fetchBalance() {
+            if(user==='Guest')return;
+            try{
+                const r = await fetch('/my-stats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user})});
+                const d = await r.json();
+                if(d.success) { document.getElementById('balance-display').innerText = d.credits; }
+            }catch(e){}
         }
 
         function createDeck() {
             deck = [];
-            for(let s of suits) {
-                for(let r of ranks) {
-                    deck.push({ rank: r, suit: s, color: (s === '♥' || s === '♦') ? 'card-red' : 'card-black' });
-                }
-            }
+            for(let s of suits) for(let r of ranks) deck.push({rank:r, suit:s, color: (s==='♥'||s==='♦')?'card-red':'card-black'});
             deck.sort(() => Math.random() - 0.5);
         }
-
         function draw() { return deck.pop(); }
 
         function startGame() {
-            const betInput = document.getElementById('bet-input');
-            const betAmount = parseInt(betInput.value);
-
-            if (isNaN(betAmount) || betAmount <= 0) { alert("Please enter a valid bet!"); return; }
-            if (balance < betAmount) { alert("Not enough money!"); return; }
+            const bet = parseInt(document.getElementById('bet-input').value);
+            const bal = parseInt(document.getElementById('balance-display').innerText);
+            if(bal < bet) return alert("Insufficient funds");
             
-            initialBetAmount = betAmount;
-            pot = betAmount * 2; 
-            stage = 0;
-            updateServerStats(betAmount, 0); 
+            initialBet = bet;
+            pot = bet * 2;
+            updateServerStats(bet, 0);
 
-            document.getElementById('game-message').style.display = 'none';
-            document.getElementById('btn-deal').style.display = 'none'; 
-            document.getElementById('gameplay-buttons').style.display = 'flex'; 
-            
             createDeck();
             playerHand = [draw(), draw()];
-            houseHand = [draw(), draw()]; 
+            houseHand = [draw(), draw()];
             community = [];
+            stage = 0;
+
+            document.getElementById('game-message').style.display = 'none';
+            document.getElementById('btn-deal').style.display = 'none';
+            document.getElementById('game-buttons').style.display = 'flex';
             
-            // Explicitly set the House HTML to ensure cards exist
-            const houseDiv = document.getElementById('house-cards');
-            houseDiv.innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
+            // Set House cards to hidden initially
+            document.getElementById('house-cards').innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
             
             renderTable();
         }
 
         function nextStage() {
-            if (stage === 0) { 
-                community.push(draw(), draw(), draw());
-                stage++;
-            } else if (stage === 1 || stage === 2) { 
-                community.push(draw());
-                stage++;
-            } else { 
-                endGame();
-                return;
-            }
+            if(stage===0) community.push(draw(), draw(), draw());
+            else if(stage===1 || stage===2) community.push(draw());
+            else return endGame();
+            stage++;
             renderTable();
         }
 
         function raise() {
-            const raiseInput = document.getElementById('bet-input');
-            const raiseAmount = parseInt(raiseInput.value);
-            
-            if (isNaN(raiseAmount) || raiseAmount < initialBetAmount) { 
-                alert(`Minimum raise is the original bet amount ($${initialBetAmount})`); 
-                raiseInput.value = initialBetAmount;
-                return; 
-            }
-            
-            if (balance < raiseAmount) { alert("Not enough money to raise!"); return; }
-            
-            pot += (raiseAmount * 2); 
-            updateServerStats(raiseAmount, 0); 
-            
+            const bet = parseInt(document.getElementById('bet-input').value);
+            const bal = parseInt(document.getElementById('balance-display').innerText);
+            if(bal < bet) return alert("Cannot raise");
+            pot += (bet * 2);
+            updateServerStats(bet, 0);
             nextStage();
         }
 
-        function fold() {
-            showMessage("You Folded.", "#ff4444");
-            resetGameUI();
-        }
+        function fold() { endGame("folded"); }
 
-        function endGame() {
-            const houseDiv = document.getElementById('house-cards');
-            houseDiv.innerHTML = '';
-            houseHand.forEach(c => houseDiv.appendChild(createCardHTML(c)));
-
-            const playerScore = evaluateHand([...playerHand, ...community]);
-            const houseScore = evaluateHand([...houseHand, ...community]);
-
-            if (playerScore > houseScore) {
-                showMessage(`You Win $${pot}!`, "#ffd700");
-                updateServerStats(0, pot); 
-            } else if (houseScore > playerScore) {
-                showMessage("House Wins.", "#ff4444");
-            } else {
-                showMessage("Split Pot.", "white");
-                updateServerStats(0, pot / 2); 
+        function endGame(reason) {
+            if(reason === "folded") {
+                document.getElementById('game-message').innerText = "You Folded";
+                document.getElementById('game-message').style.display = 'block';
+                resetUI();
+                return;
             }
+
+            // --- FIX: EXPLICITLY REVEAL HOUSE CARDS ---
+            const hDiv = document.getElementById('house-cards');
+            hDiv.innerHTML = ''; // Clear the hidden cards
+            houseHand.forEach(c => {
+                // Manually create the HTML to ensure visibility
+                hDiv.innerHTML += `<div class="card-slot ${c.color}"><div>${c.rank}</div><div class="card-center-suit">${c.suit}</div><div style="transform: rotate(180deg); text-align: right;">${c.rank}</div></div>`;
+            });
+
+            // EVALUATE
+            const pScore = evaluateHand([...playerHand, ...community]);
+            const hScore = evaluateHand([...houseHand, ...community]);
+
+            let msg = "", win = 0;
+            if(pScore > hScore) { msg = `You Win $${pot}!`; win = pot; }
+            else if(hScore > pScore) { msg = "House Wins"; }
+            else { msg = "Split Pot"; win = pot/2; }
+
+            document.getElementById('game-message').innerText = msg;
+            document.getElementById('game-message').style.display = 'block';
+            if(win > 0) updateServerStats(0, win);
             
-            resetGameUI();
+            resetUI();
         }
 
         function evaluateHand(cards) {
-            let values = cards.map(c => ranks.indexOf(c.rank)).sort((a,b) => b-a);
+            let vals = cards.map(c => ranks.indexOf(c.rank)).sort((a,b)=>b-a);
             let score = 0;
-            for (let i = 0; i < Math.min(5, values.length); i++) {
-                score += values[i] * Math.pow(16, 4 - i);
+            for(let i=0; i<Math.min(5, vals.length); i++) score += vals[i] * Math.pow(15, 4-i);
+            
+            const counts = {};
+            const suitsC = {};
+            cards.forEach(c => { counts[c.rank]=(counts[c.rank]||0)+1; suitsC[c.suit]=(suitsC[c.suit]||0)+1; });
+            
+            for(let r in counts) {
+                if(counts[r]===2) score += 1e6 + (ranks.indexOf(r)*1e4);
+                if(counts[r]===3) score += 5e6;
+                if(counts[r]===4) score += 2e7;
             }
-            const rankCounts = {};
-            const suitCounts = {};
-            cards.forEach(c => {
-                rankCounts[c.rank] = (rankCounts[c.rank] || 0) + 1;
-                suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
-            });
-            for(let r in rankCounts) {
-                const count = rankCounts[r];
-                const val = ranks.indexOf(r);
-                if (count === 2) score += 1000000 + (val * 10000); 
-                if (count === 3) score += 5000000 + (val * 10000);
-                if (count === 4) score += 20000000 + (val * 10000);
-            }
-            for(let s in suitCounts) {
-                if (suitCounts[s] >= 5) score += 10000000;
-            }
+            for(let s in suitsC) if(suitsC[s]>=5) score += 1e7;
             return score;
         }
 
-        async function updateServerStats(bet, win) {
-            const username = localStorage.getItem('username');
-            const response = await fetch('/game-result', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, betAmount: bet, winAmount: win })
-            });
-            const result = await response.json();
-            if (result.success) {
-                balance = result.credits;
-                updateUI();
-            }
-        }
-
-        function createCardHTML(card) {
-            return `<div class="card-slot ${card.color}"><div>${card.rank}</div><div class="card-center-suit">${card.suit}</div><div style="transform: rotate(180deg); text-align: right;">${card.rank}</div></div>`;
+        function resetUI() {
+            document.getElementById('btn-deal').style.display = 'block';
+            document.getElementById('game-buttons').style.display = 'none';
         }
 
         function renderTable() {
-            document.getElementById('player-cards').innerHTML = playerHand.map(createCardHTML).join('');
-            document.getElementById('community-cards').innerHTML = community.map(createCardHTML).join('');
-            for(let i=0; i < (5 - community.length); i++) 
-                document.getElementById('community-cards').innerHTML += `<div class="card-slot card-placeholder"></div>`;
+            const pDiv = document.getElementById('player-cards');
+            pDiv.innerHTML = playerHand.map(c => `<div class="card-slot ${c.color}"><div>${c.rank}</div><div class="card-center-suit">${c.suit}</div><div style="transform: rotate(180deg); text-align: right;">${c.rank}</div></div>`).join('');
+            
+            const cDiv = document.getElementById('community-cards');
+            cDiv.innerHTML = community.map(c => `<div class="card-slot ${c.color}"><div>${c.rank}</div><div class="card-center-suit">${c.suit}</div><div style="transform: rotate(180deg); text-align: right;">${c.rank}</div></div>`).join('');
+            
+            // Fill empty slots
+            for(let i=0; i < (5-community.length); i++) {
+                cDiv.innerHTML += `<div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>`;
+            }
         }
 
-        function updateUI() {
-            document.getElementById('pot-display').innerText = pot;
-            document.getElementById('balance-display').innerText = balance;
-            localStorage.setItem('credits', balance);
+        async function updateServerStats(bet, win) {
+            await fetch('/game-result', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user, betAmount:bet, winAmount:win})});
+            fetchBalance();
         }
-
-        function showMessage(msg, color) {
-            const el = document.getElementById('game-message');
-            el.innerText = msg;
-            el.style.color = color;
-            el.style.borderColor = color;
-            el.style.display = 'block';
-        }
-
-        function resetGameUI() {
-            document.getElementById('btn-deal').style.display = 'block'; 
-            document.getElementById('gameplay-buttons').style.display = 'none'; 
-            // Reset visible cards to hidden state for next game
-             const houseDiv = document.getElementById('house-cards');
-             houseDiv.innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
-        }
-        
-        // Initial clean state
-        resetGameUI();
     </script>
 </body>
 </html>
