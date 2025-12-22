@@ -21,13 +21,34 @@
         
         <div id="game-message" class="message-overlay">You Win!</div>
 
-        <div class="player-section">
-            <div class="section-label">Your Hand</div>
-            <div style="display: flex; gap: 10px;" id="player-cards">
-                <div class="card-slot card-hidden"></div>
-                <div class="card-slot card-hidden"></div>
+        <div class="cards-area">
+            
+            <div class="player-section">
+                <div class="section-label">Your Hand</div>
+                <div id="player-cards" class="hand-container">
+                    <div class="card-slot card-hidden"></div>
+                    <div class="card-slot card-hidden"></div>
+                </div>
             </div>
 
+            <div class="board-section" id="community-cards">
+                <div class="card-slot card-placeholder"></div>
+                <div class="card-slot card-placeholder"></div>
+                <div class="card-slot card-placeholder"></div>
+                <div class="card-slot card-placeholder"></div>
+                <div class="card-slot card-placeholder"></div>
+            </div>
+
+            <div class="house-section">
+                <div class="section-label">The House</div>
+                <div id="house-cards" class="hand-container">
+                    <div class="card-slot card-hidden"></div>
+                    <div class="card-slot card-hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-area">
             <div class="controls-bar">
                 <span class="bet-label">Bet: $</span>
                 
@@ -35,7 +56,7 @@
 
                 <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">DEAL HAND</button>
 
-                <div id="gameplay-buttons" style="display: none; gap: 10px;">
+                <div id="gameplay-buttons" style="display: none; gap: 15px;">
                     <button class="poker-btn btn-raise" onclick="raise()">RAISE</button>
                     <button class="poker-btn btn-check" onclick="nextStage()">CHECK</button>
                     <button class="poker-btn btn-fold" onclick="fold()">FOLD</button>
@@ -43,25 +64,9 @@
             </div>
         </div>
 
-        <div class="board-section" id="community-cards">
-            <div class="card-slot card-hidden" style="opacity: 0.5;"></div>
-            <div class="card-slot card-hidden" style="opacity: 0.5;"></div>
-            <div class="card-slot card-hidden" style="opacity: 0.5;"></div>
-            <div class="card-slot card-hidden" style="opacity: 0.5;"></div>
-            <div class="card-slot card-hidden" style="opacity: 0.5;"></div>
-        </div>
-
-        <div class="house-section">
-            <div class="section-label">The House</div>
-            <div style="display: flex; gap: 10px;" id="house-cards">
-                <div class="card-slot card-hidden"></div>
-                <div class="card-slot card-hidden"></div>
-            </div>
-        </div>
     </div>
 
     <script>
-        // --- CONFIG ---
         const suits = ['♥', '♦', '♣', '♠'];
         const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         let deck = [], playerHand = [], houseHand = [], community = [];
@@ -72,7 +77,6 @@
         const user = localStorage.getItem('username') || 'Guest';
         document.getElementById('username-display').innerText = user;
 
-        // FETCH REAL BALANCE
         fetchUserBalance();
 
         async function fetchUserBalance() {
@@ -91,7 +95,6 @@
             } catch (e) { console.error("Sync error", e); }
         }
 
-        // --- DECK LOGIC ---
         function createDeck() {
             deck = [];
             for(let s of suits) {
@@ -104,7 +107,6 @@
 
         function draw() { return deck.pop(); }
 
-        // --- GAME ACTIONS ---
         function startGame() {
             const betInput = document.getElementById('bet-input');
             const betAmount = parseInt(betInput.value);
@@ -117,7 +119,6 @@
             stage = 0;
             updateServerStats(betAmount, 0); 
 
-            // UI Updates
             document.getElementById('game-message').style.display = 'none';
             document.getElementById('btn-deal').style.display = 'none'; 
             document.getElementById('gameplay-buttons').style.display = 'flex'; 
@@ -127,6 +128,7 @@
             houseHand = [draw(), draw()]; 
             community = [];
             
+            // Explicitly set the House HTML to ensure cards exist
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
             
@@ -134,13 +136,13 @@
         }
 
         function nextStage() {
-            if (stage === 0) { // Flop
+            if (stage === 0) { 
                 community.push(draw(), draw(), draw());
                 stage++;
-            } else if (stage === 1 || stage === 2) { // Turn & River
+            } else if (stage === 1 || stage === 2) { 
                 community.push(draw());
                 stage++;
-            } else { // Showdown
+            } else { 
                 endGame();
                 return;
             }
@@ -216,7 +218,6 @@
             return score;
         }
 
-        // --- HELPERS ---
         async function updateServerStats(bet, win) {
             const username = localStorage.getItem('username');
             const response = await fetch('/game-result', {
@@ -239,7 +240,7 @@
             document.getElementById('player-cards').innerHTML = playerHand.map(createCardHTML).join('');
             document.getElementById('community-cards').innerHTML = community.map(createCardHTML).join('');
             for(let i=0; i < (5 - community.length); i++) 
-                document.getElementById('community-cards').innerHTML += `<div class="card-slot card-hidden" style="opacity:0.5"></div>`;
+                document.getElementById('community-cards').innerHTML += `<div class="card-slot card-placeholder"></div>`;
         }
 
         function updateUI() {
@@ -259,8 +260,12 @@
         function resetGameUI() {
             document.getElementById('btn-deal').style.display = 'block'; 
             document.getElementById('gameplay-buttons').style.display = 'none'; 
+            // Reset visible cards to hidden state for next game
+             const houseDiv = document.getElementById('house-cards');
+             houseDiv.innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
         }
-
+        
+        // Initial clean state
         resetGameUI();
     </script>
 </body>
