@@ -2,85 +2,97 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Play Blackjack</title>
+    <title>Queen of Hearts Casino</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="poker-body">
+<body>
 
     <nav class="navbar">
         <div class="logo">Queen of Hearts Casino</div>
         <div class="user-controls">
-            <span class="credits-badge">Balance: $<span id="balance-display">Loading...</span></span>
-            <button id="username-btn" class="user-badge" onclick="window.location.href='/account'">Guest</button>
-            <button class="logout-btn" onclick="window.location.href='/dashboard'">Exit</button>
+            <div class="balance-box">Balance: $<span id="balance-display">0</span></div>
+            <button class="account-btn" id="username-display">Account username</button>
+            <button class="logout-btn" onclick="window.location.reload()">Logout</button>
         </div>
     </nav>
 
-    <div class="blackjack-table">
-        <div id="game-message" class="message-overlay">You Win!</div>
+    <div class="game-background">
+        
+        <div id="game-message" class="message-overlay">
+            <div id="msg-text">You Win!</div>
+            <br>
+            <button class="btn-deal" onclick="resetForNewRound()">OK</button>
+        </div>
 
-        <div class="player-section">
-            <div class="section-label">Your Hand <span id="player-score">(0)</span></div>
-            <div id="player-cards" class="hand-container">
-                <div class="card-slot card-hidden"></div>
-                <div class="card-slot card-hidden"></div>
+        <div class="table-layout">
+            
+            <div class="side-column">
+                <div class="hand-label">Your Hand</div>
+                <div class="cards-container" id="player-cards">
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                </div>
+                <div style="color:white; font-weight:bold; display:none;" id="player-score-display">Score: 0</div>
             </div>
-        </div>
 
-        <div style="text-align: center; color: #d4af37; font-weight: bold; text-shadow: 1px 1px black;">
-            <p>BLACKJACK PAYS 3 TO 2</p>
-            <p>DEALER STANDS ON 17</p>
-        </div>
+            <div class="center-column">
+                
+                <div class="rules-box">
+                    ☆ Blackjack pays 3 to 2 ☆
+                    <br><br>
+                    ☆ Dealer must stand on 17 and draw up to 16 ☆
+                </div>
 
-        <div class="house-section">
-            <div class="section-label">The House <span id="house-score">(?)</span></div>
-            <div id="house-cards" class="hand-container">
-                <div class="card-slot card-hidden"></div>
-                <div class="card-slot card-hidden"></div>
+                <div class="game-controls">
+                    <button class="btn-deal" id="btn-deal" onclick="startGame()">Deal</button>
+                    
+                    <div class="action-row">
+                        <button class="btn-hit btn-disabled" id="btn-hit" onclick="hit()" disabled>Hit</button>
+                        <button class="btn-stand btn-disabled" id="btn-stand" onclick="stand()" disabled>Stand</button>
+                    </div>
+
+                    <div class="bet-display">Bet *<span id="bet-amount">10</span>*</div>
+                    
+                    <input type="number" id="bet-input" value="10" style="display:none;">
+                </div>
+
             </div>
-        </div>
 
-        <div class="game-actions-bj">
-            <button class="poker-btn btn-hit" id="btn-hit" onclick="hit()" disabled>HIT</button>
-            <button class="poker-btn btn-stand" id="btn-stand" onclick="stand()" disabled>STAND</button>
-        </div>
-
-        <div style="position: absolute; bottom: 20px;">
-            <div class="controls-bar">
-                <span style="color: #ffd700; font-weight: bold;">Bet: $</span>
-                <input type="number" id="bet-input" class="bet-input" value="10">
-                <button class="poker-btn btn-deal" onclick="startCustomGame()">DEAL</button>
-                <button class="poker-btn btn-deal" id="btn-rebet" onclick="rebet()" style="display:none; background-color: gold; color: black;">REBET</button>
+            <div class="side-column">
+                <div class="hand-label">The House</div>
+                <div class="cards-container" id="house-cards">
+                    <div class="card-slot"></div>
+                    <div class="card-slot"></div>
+                </div>
+                <div style="color:white; font-weight:bold; display:none;" id="house-score-display">Score: ?</div>
             </div>
+
         </div>
+    </div>
+
+    <div class="footer">
+        Developed by T4B5
     </div>
 
     <script>
         const suits = ['♥', '♦', '♣', '♠'];
         const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         let deck = [], playerHand = [], houseHand = [];
-        let currentBet = 0, lastBet = 0, balance = 0, gameOver = true;
-        
-        const user = localStorage.getItem('username') || 'Guest';
-        document.getElementById('username-btn').innerText = user;
+        let balance = 1000; // Starting Default Balance
+        let currentBet = 10;
+        let gameOver = true;
 
-        fetchUserBalance();
-
-        async function fetchUserBalance() {
-            if(user === 'Guest') return;
-            try {
-                const res = await fetch('/my-stats', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username: user}) });
-                const data = await res.json();
-                if(data.success) { balance = data.credits; document.getElementById('balance-display').innerText = balance; }
-            } catch(e){}
-        }
+        // Initialize UI
+        document.getElementById('balance-display').innerText = balance;
+        document.getElementById('bet-amount').innerText = currentBet;
 
         function createDeck() {
             deck = [];
             for(let s of suits) {
                 for(let r of ranks) {
                     let val = (['J','Q','K'].includes(r)) ? 10 : (r === 'A' ? 11 : parseInt(r));
-                    deck.push({ rank: r, suit: s, value: val, color: (s === '♥' || s === '♦') ? 'card-red' : 'card-black' });
+                    let color = (s === '♥' || s === '♦') ? 'card-red' : 'card-black';
+                    deck.push({ rank: r, suit: s, value: val, color: color });
                 }
             }
             deck.sort(() => Math.random() - 0.5);
@@ -88,67 +100,87 @@
 
         function draw() { return deck.pop(); }
 
-        function startCustomGame() {
-            const val = parseInt(document.getElementById('bet-input').value);
-            if (!val || val <= 0) return alert("Enter valid bet");
-            startGame(val);
-        }
-        function rebet() { if(lastBet > 0) startGame(lastBet); }
-
-        function startGame(amount) {
-            if (balance < amount) return alert("Not enough funds");
-            currentBet = amount; lastBet = amount;
-            balance -= amount;
-            gameOver = false;
+        function startGame() {
+            if(balance < currentBet) { alert("Insufficient funds"); return; }
             
-            updateServerStats(amount, 0);
+            gameOver = false;
+            balance -= currentBet;
+            updateBalance();
+
             createDeck();
             playerHand = [draw(), draw()];
             houseHand = [draw(), draw()];
-            
-            document.getElementById('game-message').style.display = 'none';
-            document.getElementById('btn-rebet').style.display = 'none';
-            document.getElementById('house-score').innerText = "(?)";
-            
-            toggleControls(true);
-            renderTable(false);
 
-            if (calculateScore(playerHand) === 21) setTimeout(() => handleBlackjack(), 500);
+            // UI Updates
+            document.getElementById('btn-deal').disabled = true;
+            document.getElementById('btn-deal').classList.add('btn-disabled');
+            
+            document.getElementById('btn-hit').disabled = false;
+            document.getElementById('btn-hit').classList.remove('btn-disabled');
+            
+            document.getElementById('btn-stand').disabled = false;
+            document.getElementById('btn-stand').classList.remove('btn-disabled');
+
+            renderTable(false); // False = Hide Dealer's 2nd card
+
+            // Immediate Blackjack Check
+            if (calculateScore(playerHand) === 21) {
+                setTimeout(() => handleResult("Blackjack! You Win!", currentBet * 2.5), 500);
+            }
         }
 
         function hit() {
             if(gameOver) return;
             playerHand.push(draw());
             renderTable(false);
-            if(calculateScore(playerHand) > 21) endGame("BUST!", 0);
+            if(calculateScore(playerHand) > 21) {
+                handleResult("BUST! House Wins.", 0);
+            }
         }
 
         function stand() {
             if(gameOver) return;
+            // Dealer Logic
             let ds = calculateScore(houseHand);
-            while(ds < 17) { houseHand.push(draw()); ds = calculateScore(houseHand); }
-            renderTable(true);
-            
+            while(ds < 17) {
+                houseHand.push(draw());
+                ds = calculateScore(houseHand);
+            }
+            renderTable(true); // Show Dealer Cards
+
             const ps = calculateScore(playerHand);
-            if(ds > 21) endGame("Dealer Busts! You Win", currentBet * 2);
-            else if(ps > ds) endGame("You Win!", currentBet * 2);
-            else if(ds > ps) endGame("House Wins", 0);
-            else endGame("Push", currentBet);
+            if(ds > 21) handleResult("Dealer Busts! You Win!", currentBet * 2);
+            else if(ps > ds) handleResult("You Win!", currentBet * 2);
+            else if(ds > ps) handleResult("House Wins.", 0);
+            else handleResult("Push (Tie)", currentBet);
         }
 
-        function handleBlackjack() {
-            renderTable(true);
-            if(calculateScore(houseHand) === 21) endGame("Push", currentBet);
-            else endGame("BLACKJACK!", currentBet * 2.5);
-        }
-
-        function endGame(msg, payout) {
+        function handleResult(msg, payout) {
             gameOver = true;
-            toggleControls(false);
-            document.getElementById('game-message').innerText = msg;
+            balance += payout;
+            updateBalance();
+            
+            document.getElementById('msg-text').innerText = msg;
             document.getElementById('game-message').style.display = 'block';
-            if(payout > 0) updateServerStats(0, payout);
-            document.getElementById('btn-rebet').style.display = 'inline-block';
+            
+            // Disable buttons
+            document.getElementById('btn-hit').classList.add('btn-disabled');
+            document.getElementById('btn-stand').classList.add('btn-disabled');
+        }
+
+        function resetForNewRound() {
+            document.getElementById('game-message').style.display = 'none';
+            document.getElementById('btn-deal').disabled = false;
+            document.getElementById('btn-deal').classList.remove('btn-disabled');
+            
+            // Clear Cards Visuals
+            const emptySlot = '<div class="card-slot"></div>';
+            document.getElementById('player-cards').innerHTML = emptySlot + emptySlot;
+            document.getElementById('house-cards').innerHTML = emptySlot + emptySlot;
+        }
+
+        function updateBalance() {
+            document.getElementById('balance-display').innerText = balance;
         }
 
         function calculateScore(hand) {
@@ -159,33 +191,29 @@
         }
 
         function renderTable(showHouse) {
+            // Render Player
             document.getElementById('player-cards').innerHTML = playerHand.map(createCardHTML).join('');
-            document.getElementById('player-score').innerText = `(${calculateScore(playerHand)})`;
             
+            // Render House
             const hDiv = document.getElementById('house-cards');
             hDiv.innerHTML = '';
             houseHand.forEach((c, i) => {
-                if(i===0 && !showHouse) hDiv.innerHTML += `<div class="card-slot card-hidden"></div>`;
-                else hDiv.innerHTML += createCardHTML(c);
+                if(i === 0 && !showHouse) {
+                    // Face down card
+                    hDiv.innerHTML += `<div class="card-slot" style="background: repeating-linear-gradient(45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px);"></div>`;
+                } else {
+                    hDiv.innerHTML += createCardHTML(c);
+                }
             });
-            if(showHouse) document.getElementById('house-score').innerText = `(${calculateScore(houseHand)})`;
         }
 
         function createCardHTML(c) {
-            return `<div class="card-slot ${c.color}"><div>${c.rank}</div><div class="card-center-suit">${c.suit}</div><div style="transform: rotate(180deg); text-align: right;">${c.rank}</div></div>`;
-        }
-
-        function toggleControls(active) {
-            document.getElementById('btn-hit').disabled = !active;
-            document.getElementById('btn-stand').disabled = !active;
-        }
-
-        async function updateServerStats(bet, win) {
-            try {
-                const res = await fetch('/game-result', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username: user, betAmount: bet, winAmount: win})});
-                const d = await res.json();
-                if(d.success) { balance = d.credits; document.getElementById('balance-display').innerText = balance; }
-            } catch(e){}
+            return `
+            <div class="card-slot ${c.color}">
+                <div class="rank-top">${c.rank}</div>
+                <div class="suit-center">${c.suit}</div>
+                <div class="rank-bot">${c.rank}</div>
+            </div>`;
         }
     </script>
 </body>
