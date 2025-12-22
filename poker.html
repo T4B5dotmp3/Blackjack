@@ -4,6 +4,18 @@
     <meta charset="UTF-8">
     <title>Play Poker</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Small styling for the input box */
+        .bet-input {
+            width: 80px;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+    </style>
 </head>
 <body class="poker-body">
 
@@ -18,7 +30,6 @@
     </nav>
 
     <div class="poker-table">
-        
         <div id="game-message" class="message-overlay">You Win!</div>
 
         <div class="player-section">
@@ -28,11 +39,14 @@
                 <div class="card-slot card-hidden"></div>
             </div>
 
-            <div class="action-controls">
-                <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()">Raise $10</button>
-                <button class="poker-btn btn-check" id="btn-check" onclick="nextStage()">Check</button>
-                <button class="poker-btn btn-fold" id="btn-fold" onclick="fold()">Fold</button>
-                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">Deal Hand ($10)</button>
+            <div class="action-controls" style="align-items: center;">
+                <input type="number" id="bet-amount" class="bet-input" value="10" min="1">
+                
+                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">Deal</button>
+                
+                <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()" disabled>Raise</button>
+                <button class="poker-btn btn-check" id="btn-check" onclick="nextStage()" disabled>Check</button>
+                <button class="poker-btn btn-fold" id="btn-fold" onclick="fold()" disabled>Fold</button>
             </div>
         </div>
 
@@ -45,7 +59,7 @@
         </div>
 
         <div class="house-section">
-            <div class="section-label">The House has :</div>
+            <div class="section-label">The House</div>
             <div style="display: flex; gap: 10px;" id="house-cards">
                 <div class="card-slot card-hidden"></div>
                 <div class="card-slot card-hidden"></div>
@@ -53,30 +67,17 @@
         </div>
     </div>
 
-    <footer class="footer">Developed by T4B5</footer>
-
     <script>
-        // --- CONFIG ---
         const suits = ['♥', '♦', '♣', '♠'];
         const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-        let deck = [];
-        let playerHand = [];
-        let houseHand = [];
-        let community = [];
-        let stage = 0; 
-        let pot = 0;
-        
-        // Load User Info
+        let deck = [], playerHand = [], houseHand = [], community = [];
+        let stage = 0, pot = 0;
         let balance = parseInt(localStorage.getItem('credits')) || 0;
         const user = localStorage.getItem('username') || 'Guest';
+
         document.getElementById('username-btn').innerText = user;
         updateUI();
-        
-        // Show "Deal" button initially
-        toggleGameButtons(false);
-        document.getElementById('btn-deal').style.display = 'block';
 
-        // --- DECK LOGIC ---
         function createDeck() {
             deck = [];
             for(let s of suits) {
@@ -89,54 +90,52 @@
 
         function draw() { return deck.pop(); }
 
-        // --- GAME ACTIONS ---
         function startGame() {
-            if (balance < 10) { alert("Need $10 to play!"); return; }
-            
-            // UI Updates
-            pot = 20; 
-            stage = 0;
-            document.getElementById('game-message').style.display = 'none';
-            document.getElementById('btn-deal').style.display = 'none';
-            
-            // Server Sync
-            updateServerStats(10, 0); 
+            const betInput = document.getElementById('bet-amount');
+            const bet = parseInt(betInput.value);
 
-            // Deck Logic
+            if (isNaN(bet) || bet <= 0) { alert("Enter a valid bet!"); return; }
+            if (balance < bet) { alert("Not enough money!"); return; }
+
+            // Take Bet
+            pot = bet * 2; // House matches your bet
+            stage = 0;
+            updateServerStats(bet, 0); // Record bet
+
+            // Setup
             createDeck();
             playerHand = [draw(), draw()];
-            houseHand = [draw(), draw()]; 
+            houseHand = [draw(), draw()];
             community = [];
             
-            const houseDiv = document.getElementById('house-cards');
-            houseDiv.innerHTML = `
-                <div class="card-slot card-hidden"></div>
-                <div class="card-slot card-hidden"></div>
-            `;
+            // UI Reset
+            document.getElementById('game-message').style.display = 'none';
+            document.getElementById('btn-deal').style.display = 'none';
+            betInput.disabled = true; // Lock bet amount during hand
             
+            const houseDiv = document.getElementById('house-cards');
+            houseDiv.innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
+
             toggleGameButtons(true);
             renderTable();
         }
 
-        function nextStage() {
-            if (stage === 0) { // Flop
-                community.push(draw(), draw(), draw());
-                stage++;
-            } else if (stage === 1 || stage === 2) { // Turn & River
-                community.push(draw());
-                stage++;
-            } else { // Showdown
-                endGame();
-                return;
-            }
-            renderTable();
+        function raise() {
+            const betInput = document.getElementById('bet-amount');
+            const raiseAmt = parseInt(betInput.value);
+
+            if (balance < raiseAmt) { alert("Not enough to raise!"); return; }
+
+            pot += (raiseAmt * 2); // House matches raise
+            updateServerStats(raiseAmt, 0);
+            nextStage();
         }
 
-        function raise() {
-            if (balance < 10) { alert("Not enough money!"); return; }
-            pot += 20; 
-            updateServerStats(10, 0); 
-            nextStage();
+        function nextStage() {
+            if (stage === 0) { community.push(draw(), draw(), draw()); stage++; }
+            else if (stage === 1 || stage === 2) { community.push(draw()); stage++; }
+            else { endGame(); return; }
+            renderTable();
         }
 
         function fold() {
@@ -144,145 +143,85 @@
             resetGameUI();
         }
 
-        // --- SHOWDOWN LOGIC ---
         function endGame() {
-            // Reveal House Cards
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = '';
             houseHand.forEach(c => houseDiv.appendChild(createCardHTML(c)));
 
-            // Calculate Scores
             const playerScore = evaluateHand([...playerHand, ...community]);
             const houseScore = evaluateHand([...houseHand, ...community]);
 
             if (playerScore > houseScore) {
                 showMessage(`You Win $${pot}!`, "#ffd700");
-                updateServerStats(0, pot); 
+                updateServerStats(0, pot);
             } else if (houseScore > playerScore) {
                 showMessage("House Wins.", "#ff4444");
             } else {
                 showMessage("Split Pot.", "white");
                 updateServerStats(0, pot / 2);
             }
-            
             resetGameUI();
         }
 
-        // --- IMPROVED HAND EVALUATOR (Fixes Ace vs Queen bug) ---
+        // --- EVALUATOR ---
         function evaluateHand(cards) {
-            // 1. Convert cards to numerical values (2=0, ... A=12)
-            let values = cards.map(c => ranks.indexOf(c.rank));
-            
-            // 2. Sort values DESCENDING (High cards first: A, K, Q...)
-            values.sort((a, b) => b - a);
-
-            // 3. Calculate "High Card" Score (Weighted Sum)
-            // We take the top 5 cards. We multiply the highest by a huge number.
-            // This ensures an Ace (12) is ALWAYS worth more than a King (11) + lower cards.
+            let values = cards.map(c => ranks.indexOf(c.rank)).sort((a,b) => b-a);
             let score = 0;
-            // Using Base 16 weighting ensures no overlap
-            for (let i = 0; i < Math.min(5, values.length); i++) {
-                score += values[i] * Math.pow(16, 4 - i);
-            }
+            for (let i = 0; i < Math.min(5, values.length); i++) score += values[i] * Math.pow(16, 4-i);
 
-            // 4. Add Bonuses for Pairs, Trips, Flush
-            const rankCounts = {};
-            const suitCounts = {};
-            
-            cards.forEach(c => {
-                rankCounts[c.rank] = (rankCounts[c.rank] || 0) + 1;
-                suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
-            });
+            const counts = {};
+            const suitsC = {};
+            cards.forEach(c => { counts[c.rank] = (counts[c.rank]||0)+1; suitsC[c.suit] = (suitsC[c.suit]||0)+1; });
 
-            for(let r in rankCounts) {
-                const count = rankCounts[r];
-                const rValue = ranks.indexOf(r);
-                
-                if (count === 2) score += 1000000 + (rValue * 10000); // Pair
-                if (count === 3) score += 5000000 + (rValue * 10000); // Trips
-                if (count === 4) score += 20000000 + (rValue * 10000); // Quads
+            for(let r in counts) {
+                if(counts[r]===2) score+=1e6 + (ranks.indexOf(r)*1e4);
+                if(counts[r]===3) score+=5e6 + (ranks.indexOf(r)*1e4);
+                if(counts[r]===4) score+=2e7 + (ranks.indexOf(r)*1e4);
             }
-
-            for(let s in suitCounts) {
-                if (suitCounts[s] >= 5) score += 10000000; // Flush beats Trips
-            }
+            for(let s in suitsC) if(suitsC[s]>=5) score+=1e7;
             
             return score;
         }
 
-        // --- SERVER SYNC ---
-        async function updateServerStats(bet, win) {
-            const username = localStorage.getItem('username');
-            try {
-                const response = await fetch('/game-result', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        username: username, 
-                        betAmount: bet, 
-                        winAmount: win 
-                    })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    balance = result.credits;
-                    updateUI();
-                }
-            } catch(e) { console.log(e); }
-        }
-
-        // --- RENDERING ---
-        function createCardHTML(card) {
-            const div = document.createElement('div');
-            div.className = `card-slot ${card.color}`;
-            div.innerHTML = `
-                <div>${card.rank}</div>
-                <div class="card-center-suit">${card.suit}</div>
-                <div style="transform: rotate(180deg); text-align: right;">${card.rank}</div>
-            `;
-            return div;
-        }
-
-        function renderTable() {
-            const pDiv = document.getElementById('player-cards');
-            pDiv.innerHTML = '';
-            playerHand.forEach(c => pDiv.appendChild(createCardHTML(c)));
-
-            const cDiv = document.getElementById('community-cards');
-            cDiv.innerHTML = '';
-            community.forEach(c => cDiv.appendChild(createCardHTML(c)));
-            
-            for(let i=0; i < (5 - community.length); i++) {
-                const empty = document.createElement('div');
-                empty.className = 'card-slot card-hidden';
-                empty.style.opacity = "0.5";
-                cDiv.appendChild(empty);
-            }
-        }
-
-        function updateUI() {
-            document.getElementById('pot-display').innerText = pot;
-            document.getElementById('balance-display').innerText = balance;
-            localStorage.setItem('credits', balance);
-        }
-
-        function showMessage(msg, color) {
-            const el = document.getElementById('game-message');
-            el.innerText = msg;
-            el.style.color = color;
-            el.style.borderColor = color;
-            el.style.display = 'block';
-        }
-
+        // --- UI HELPER ---
         function resetGameUI() {
             toggleGameButtons(false);
-            document.getElementById('btn-deal').style.display = 'block';
+            document.getElementById('btn-deal').style.display = 'inline-block';
+            document.getElementById('bet-amount').disabled = false; // Unlock input
         }
 
         function toggleGameButtons(active) {
             document.getElementById('btn-raise').disabled = !active;
             document.getElementById('btn-check').disabled = !active;
             document.getElementById('btn-fold').disabled = !active;
+        }
+
+        async function updateServerStats(bet, win) {
+            try {
+                const res = await fetch('/game-result', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({username: user, betAmount: bet, winAmount: win})
+                });
+                const data = await res.json();
+                if(data.success) { balance = data.credits; updateUI(); }
+            } catch(e){}
+        }
+
+        function updateUI() {
+            document.getElementById('pot-display').innerText = pot;
+            document.getElementById('balance-display').innerText = balance;
+        }
+
+        function createCardHTML(card) {
+            return `<div class="card-slot ${card.color}"><div>${card.rank}</div><div class="card-center-suit">${card.suit}</div><div style="transform: rotate(180deg); text-align: right;">${card.rank}</div></div>`;
+        }
+
+        function renderTable() {
+            document.getElementById('player-cards').innerHTML = playerHand.map(createCardHTML).join('');
+            document.getElementById('community-cards').innerHTML = community.map(createCardHTML).join('');
+            for(let i=0; i<(5-community.length); i++) 
+                document.getElementById('community-cards').innerHTML += `<div class="card-slot card-hidden" style="opacity:0.5"></div>`;
         }
     </script>
 </body>

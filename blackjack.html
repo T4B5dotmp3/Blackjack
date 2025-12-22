@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <title>Play Blackjack</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .bet-input {
+            width: 100px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        .rebet-btn {
+            background-color: #ffd700;
+            color: black;
+            border: 2px solid #d4af37;
+        }
+    </style>
 </head>
 <body class="poker-body">
 
@@ -18,9 +34,7 @@
     </nav>
 
     <div class="poker-table">
-        
         <div id="bj-popup" class="bj-popup">BLACKJACK!</div>
-        
         <div id="game-message" class="message-overlay">You Win!</div>
 
         <div class="player-section">
@@ -34,7 +48,6 @@
         <div class="blackjack-center-rules">
             <p>☆ Blackjack pays 3 to 2 ☆</p>
             <p>☆ Dealer stands on 17 ☆</p>
-            <p>☆ Insurance pays 2 to 1 ☆</p>
         </div>
 
         <div class="house-section">
@@ -46,9 +59,15 @@
         </div>
 
         <div class="betting-controls" id="bet-controls">
-            <button class="bet-btn" onclick="startGame(5)">$5</button>
-            <button class="bet-btn" onclick="startGame(10)">$10</button>
-            <button class="bet-btn" onclick="startGame(15)">$15</button>
+            <input type="number" id="bet-input" class="bet-input" placeholder="Amount" value="10">
+            
+            <button class="bet-btn" style="width: auto; border-radius: 10px; padding: 0 15px;" onclick="startCustomGame()">
+                Deal Hand
+            </button>
+            
+            <button id="btn-rebet" class="bet-btn rebet-btn" style="width: auto; border-radius: 10px; padding: 0 15px; display: none;" onclick="rebet()">
+                Rebet & Deal
+            </button>
         </div>
 
         <div class="game-actions">
@@ -58,29 +77,22 @@
     </div>
 
     <script>
-        // --- CONFIG ---
         const suits = ['♥', '♦', '♣', '♠'];
         const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
         
-        let deck = [];
-        let playerHand = [];
-        let houseHand = [];
-        let currentBet = 0;
+        let deck = [], playerHand = [], houseHand = [];
+        let currentBet = 0, lastBet = 0;
         let balance = parseInt(localStorage.getItem('credits')) || 0;
         let gameOver = true;
 
-        // Init UI
         document.getElementById('balance-display').innerText = balance;
         document.getElementById('username-btn').innerText = localStorage.getItem('username') || 'Guest';
 
-        // --- DECK LOGIC ---
         function createDeck() {
             deck = [];
             for(let s of suits) {
                 for(let r of ranks) {
-                    let val = parseInt(r);
-                    if (['J','Q','K'].includes(r)) val = 10;
-                    if (r === 'A') val = 11;
+                    let val = (['J','Q','K'].includes(r)) ? 10 : (r === 'A' ? 11 : parseInt(r));
                     deck.push({ rank: r, suit: s, value: val, color: (s === '♥' || s === '♦') ? 'card-red' : 'card-black' });
                 }
             }
@@ -89,81 +101,74 @@
 
         function draw() { return deck.pop(); }
 
-        // --- GAME START ---
+        // --- START GAME LOGIC ---
+        function startCustomGame() {
+            const val = parseInt(document.getElementById('bet-input').value);
+            if (!val || val <= 0) return alert("Enter a valid amount");
+            startGame(val);
+        }
+
+        function rebet() {
+            if (lastBet > 0) startGame(lastBet);
+        }
+
         function startGame(amount) {
             if (balance < amount) return alert("Not enough credits!");
-            
-            // 1. Setup
+
             currentBet = amount;
-            balance -= amount; // Deduct visually
+            lastBet = amount; // Save for Rebet
+            document.getElementById('btn-rebet').style.display = 'none'; // Hide Rebet while playing
+
+            balance -= amount;
             gameOver = false;
             createDeck();
             
-            // 2. Server Sync (Record Bet)
             updateServerStats(amount, 0);
 
-            // 3. Deal Cards
             playerHand = [draw(), draw()];
             houseHand = [draw(), draw()];
             
-            // 4. Update UI
+            // UI Reset
             document.getElementById('game-message').style.display = 'none';
             document.getElementById('bj-popup').classList.remove('show');
             document.getElementById('current-bet').innerText = currentBet;
+            
             toggleControls(true);
-            renderTable(false); // Hide dealer's 2nd card
+            renderTable(false);
 
-            // 5. CHECK FOR BLACKJACK IMMEDIATELY
-            const pScore = calculateScore(playerHand);
-            if (pScore === 21) {
-                setTimeout(() => handleBlackjack(), 500);
-            }
+            // Check BJ
+            if (calculateScore(playerHand) === 21) setTimeout(() => handleBlackjack(), 500);
         }
 
-        // --- ACTIONS ---
         function hit() {
             if (gameOver) return;
             playerHand.push(draw());
             renderTable(false);
-            
-            if (calculateScore(playerHand) > 21) {
-                endGame("Bust! House Wins.");
-            }
+            if (calculateScore(playerHand) > 21) endGame("Bust! House Wins.");
         }
 
         function stand() {
             if (gameOver) return;
-            
-            // Dealer Turn
             let dScore = calculateScore(houseHand);
             while (dScore < 17) {
                 houseHand.push(draw());
                 dScore = calculateScore(houseHand);
             }
-            
-            renderTable(true); // Reveal dealer card
+            renderTable(true);
             determineWinner();
         }
 
-        // --- WINNER LOGIC ---
         function handleBlackjack() {
-            // Check if dealer also has BJ
             if (calculateScore(houseHand) === 21) {
                 renderTable(true);
                 endGame("Push (Tie)", currentBet);
             } else {
-                // PLAYER WINS 3:2
                 renderTable(true);
-                const winAmount = currentBet + (currentBet * 1.5);
-                
-                // Show Popup
-                const popup = document.getElementById('bj-popup');
-                popup.classList.add('show');
-                
-                // Delay standard message slightly
+                const win = currentBet + (currentBet * 1.5);
+                document.getElementById('bj-popup').classList.add('show');
                 setTimeout(() => {
-                    popup.classList.remove('show');
-                    endGame("BLACKJACK! Pays 3:2", winAmount);
+                    document.getElementById('bj-popup').classList.remove('show');
+                    endGame("BLACKJACK! Pays 3:2", win);
                 }, 2000);
             }
         }
@@ -172,103 +177,72 @@
             const pScore = calculateScore(playerHand);
             const dScore = calculateScore(houseHand);
 
-            if (dScore > 21) {
-                endGame("Dealer Busts! You Win.", currentBet * 2);
-            } else if (pScore > dScore) {
-                endGame("You Win!", currentBet * 2);
-            } else if (dScore > pScore) {
-                endGame("House Wins.");
-            } else {
-                endGame("Push.", currentBet);
-            }
+            if (dScore > 21) endGame("Dealer Busts! You Win.", currentBet * 2);
+            else if (pScore > dScore) endGame("You Win!", currentBet * 2);
+            else if (dScore > pScore) endGame("House Wins.");
+            else endGame("Push.", currentBet);
         }
 
         function endGame(msg, payout = 0) {
             gameOver = true;
             toggleControls(false);
             
-            // Show Message
             const msgEl = document.getElementById('game-message');
             msgEl.innerText = msg;
             msgEl.style.display = 'block';
             msgEl.style.color = payout > currentBet ? '#ffd700' : (payout === currentBet ? 'white' : '#ff4444');
 
-            // Server Sync (Record Winnings)
-            if (payout > 0) {
-                // We pass 0 as betAmount because we already deducted it at start
-                updateServerStats(0, payout);
-            }
+            if (payout > 0) updateServerStats(0, payout);
+            
+            // SHOW REBET BUTTON
+            const rebetBtn = document.getElementById('btn-rebet');
+            rebetBtn.style.display = 'inline-block';
+            rebetBtn.innerText = `Rebet ($${lastBet})`;
         }
 
-        // --- HELPERS ---
         function calculateScore(hand) {
-            let score = 0;
-            let aces = 0;
-            hand.forEach(c => {
-                score += c.value;
-                if (c.rank === 'A') aces++;
-            });
-            // Adjust Aces (11 -> 1) if bust
-            while (score > 21 && aces > 0) {
-                score -= 10;
-                aces--;
-            }
+            let score = 0, aces = 0;
+            hand.forEach(c => { score += c.value; if (c.rank === 'A') aces++; });
+            while (score > 21 && aces > 0) { score -= 10; aces--; }
             return score;
         }
 
         async function updateServerStats(bet, win) {
             const username = localStorage.getItem('username');
             try {
-                const response = await fetch('/game-result', {
+                const res = await fetch('/game-result', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, betAmount: bet, winAmount: win })
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({username, betAmount: bet, winAmount: win})
                 });
-                const result = await response.json();
-                if (result.success) {
-                    balance = result.credits;
-                    document.getElementById('balance-display').innerText = balance;
-                    localStorage.setItem('credits', balance);
-                }
-            } catch(e) { console.error(e); }
+                const data = await res.json();
+                if(data.success) { balance = data.credits; document.getElementById('balance-display').innerText = balance; }
+            } catch(e){}
         }
 
-        // --- RENDERING ---
         function createCardHTML(card) {
-            return `
-                <div class="card-slot ${card.color}">
-                    <div>${card.rank}</div>
-                    <div class="card-center-suit">${card.suit}</div>
-                    <div style="transform: rotate(180deg); text-align: right;">${card.rank}</div>
-                </div>
-            `;
+            return `<div class="card-slot ${card.color}"><div>${card.rank}</div><div class="card-center-suit">${card.suit}</div><div style="transform: rotate(180deg); text-align: right;">${card.rank}</div></div>`;
         }
 
         function renderTable(revealDealer) {
-            // Player
-            const pDiv = document.getElementById('player-cards');
-            pDiv.innerHTML = playerHand.map(c => createCardHTML(c)).join('');
+            document.getElementById('player-cards').innerHTML = playerHand.map(createCardHTML).join('');
             document.getElementById('player-score').innerText = `(${calculateScore(playerHand)})`;
 
-            // House
             const hDiv = document.getElementById('house-cards');
             hDiv.innerHTML = '';
-            
-            houseHand.forEach((c, index) => {
-                if (index === 0 && !revealDealer) {
-                    // Hidden Card
-                    hDiv.innerHTML += `<div class="card-slot card-hidden"></div>`;
-                } else {
-                    hDiv.innerHTML += createCardHTML(c);
-                }
+            houseHand.forEach((c, i) => {
+                if (i === 0 && !revealDealer) hDiv.innerHTML += `<div class="card-slot card-hidden"></div>`;
+                else hDiv.innerHTML += createCardHTML(c);
             });
         }
 
         function toggleControls(active) {
             document.getElementById('btn-hit').disabled = !active;
             document.getElementById('btn-stand').disabled = !active;
-            document.getElementById('bet-controls').style.pointerEvents = active ? 'none' : 'auto';
-            document.getElementById('bet-controls').style.opacity = active ? '0.5' : '1';
+            const ctrl = document.getElementById('bet-controls');
+            // Disable inputs while playing, enable when done
+            ctrl.style.pointerEvents = active ? 'none' : 'auto';
+            ctrl.style.opacity = active ? '0.5' : '1';
         }
     </script>
 </body>
