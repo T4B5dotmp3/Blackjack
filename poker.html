@@ -5,15 +5,30 @@
     <title>Play Poker</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Small styling for the input box */
         .bet-input {
             width: 80px;
-            padding: 8px;
+            padding: 10px;
             border-radius: 5px;
-            border: none;
+            border: 2px solid #ffd700;
+            background: #222;
+            color: white;
             text-align: center;
             font-weight: bold;
+            font-size: 1.1rem;
+        }
+        /* Make the Deal button stand out */
+        .btn-deal-start {
+            background-color: #28a745; /* Green */
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
             font-size: 1rem;
+        }
+        .btn-deal-start:hover {
+            background-color: #218838;
         }
     </style>
 </head>
@@ -39,14 +54,21 @@
                 <div class="card-slot card-hidden"></div>
             </div>
 
-            <div class="action-controls" style="align-items: center;">
-                <input type="number" id="bet-amount" class="bet-input" value="10" min="1">
+            <div class="action-controls" style="align-items: center; gap: 10px;">
                 
-                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">Deal</button>
-                
-                <button class="poker-btn btn-raise" id="btn-raise" onclick="raise()" disabled>Raise</button>
-                <button class="poker-btn btn-check" id="btn-check" onclick="nextStage()" disabled>Check</button>
-                <button class="poker-btn btn-fold" id="btn-fold" onclick="fold()" disabled>Fold</button>
+                <div id="betting-area" style="display: flex; gap: 10px; align-items: center;">
+                    <span style="color: #ffd700; font-weight: bold;">Bet: $</span>
+                    <input type="number" id="bet-amount" class="bet-input" value="10" min="1" onkeydown="if(event.key==='Enter') startGame()">
+                    
+                    <button class="btn-deal-start" onclick="startGame()">DEAL HAND</button>
+                </div>
+
+                <div id="game-buttons" style="display: none; gap: 10px;">
+                    <button class="poker-btn btn-raise" onclick="raise()">Raise</button>
+                    <button class="poker-btn btn-check" onclick="nextStage()">Check</button>
+                    <button class="poker-btn btn-fold" onclick="fold()">Fold</button>
+                </div>
+
             </div>
         </div>
 
@@ -73,15 +95,14 @@
         let deck = [], playerHand = [], houseHand = [], community = [];
         let stage = 0, pot = 0;
         
-        // Initial load from storage (fallback)
         let balance = parseInt(localStorage.getItem('credits')) || 0;
         const user = localStorage.getItem('username') || 'Guest';
 
         document.getElementById('username-btn').innerText = user;
-        // Don't just update UI, fetch the real data immediately
+
+        // 1. FETCH REAL BALANCE ON LOAD
         fetchUserBalance();
 
-        // --- NEW FUNCTION: SYNC BALANCE ON LOAD ---
         async function fetchUserBalance() {
             if (!user) return;
             try {
@@ -92,13 +113,14 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    balance = data.credits; // Update the global variable used for betting
-                    localStorage.setItem('credits', balance); // Save for later
-                    updateUI(); // Update the screen
+                    balance = data.credits;
+                    localStorage.setItem('credits', balance);
+                    updateUI();
                 }
             } catch (e) { console.log("Error fetching balance:", e); }
         }
 
+        // --- DECK LOGIC ---
         function createDeck() {
             deck = [];
             for(let s of suits) {
@@ -111,51 +133,66 @@
 
         function draw() { return deck.pop(); }
 
+        // --- MAIN GAME START ---
         function startGame() {
+            // Get the value from the input box
             const betInput = document.getElementById('bet-amount');
-            const bet = parseInt(betInput.value);
+            let bet = parseInt(betInput.value);
 
-            if (isNaN(bet) || bet <= 0) { alert("Enter a valid bet!"); return; }
-            if (balance < bet) { alert("Not enough money!"); return; }
+            // Validation
+            if (isNaN(bet) || bet <= 0) { alert("Please enter a valid bet amount!"); return; }
+            if (balance < bet) { alert("You don't have enough credits!"); return; }
 
-            // Take Bet
-            pot = bet * 2; // House matches your bet
+            // Logic
+            pot = bet * 2; // House matches
             stage = 0;
-            updateServerStats(bet, 0); // Record bet
+            updateServerStats(bet, 0); // Deduct money immediately
 
-            // Setup
+            // Setup Cards
             createDeck();
             playerHand = [draw(), draw()];
             houseHand = [draw(), draw()];
             community = [];
             
-            // UI Reset
+            // UI Switches
             document.getElementById('game-message').style.display = 'none';
-            document.getElementById('btn-deal').style.display = 'none';
-            betInput.disabled = true; 
+            document.getElementById('betting-area').style.display = 'none'; // Hide input
+            document.getElementById('game-buttons').style.display = 'flex'; // Show controls
             
+            // Reset House Display
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
 
-            toggleGameButtons(true);
             renderTable();
         }
 
+        // --- GAME ACTIONS ---
         function raise() {
-            const betInput = document.getElementById('bet-amount');
-            const raiseAmt = parseInt(betInput.value);
+            // Raising costs the same amount as the initial bet for simplicity in this version
+            // Or we can ask for another input. For now, let's make it a fixed Raise of $10 or match initial bet.
+            // Let's use the input value that started the game
+            const initialBet = parseInt(document.getElementById('bet-amount').value);
+            
+            if (balance < initialBet) { alert("Not enough to raise!"); return; }
 
-            if (balance < raiseAmt) { alert("Not enough to raise!"); return; }
-
-            pot += (raiseAmt * 2); // House matches raise
-            updateServerStats(raiseAmt, 0);
+            pot += (initialBet * 2); 
+            updateServerStats(initialBet, 0);
             nextStage();
         }
 
         function nextStage() {
-            if (stage === 0) { community.push(draw(), draw(), draw()); stage++; }
-            else if (stage === 1 || stage === 2) { community.push(draw()); stage++; }
-            else { endGame(); return; }
+            if (stage === 0) { // Flop
+                community.push(draw(), draw(), draw()); 
+                stage++; 
+            }
+            else if (stage === 1 || stage === 2) { // Turn & River
+                community.push(draw()); 
+                stage++; 
+            }
+            else { 
+                endGame(); 
+                return; 
+            }
             renderTable();
         }
 
@@ -164,6 +201,7 @@
             resetGameUI();
         }
 
+        // --- END GAME & EVALUATION ---
         function endGame() {
             const houseDiv = document.getElementById('house-cards');
             houseDiv.innerHTML = '';
@@ -184,7 +222,7 @@
             resetGameUI();
         }
 
-        // --- EVALUATOR ---
+        // Weighted Scoring Logic (Ace > King)
         function evaluateHand(cards) {
             let values = cards.map(c => ranks.indexOf(c.rank)).sort((a,b) => b-a);
             let score = 0;
@@ -200,20 +238,21 @@
                 if(counts[r]===4) score+=2e7 + (ranks.indexOf(r)*1e4);
             }
             for(let s in suitsC) if(suitsC[s]>=5) score+=1e7;
-            
             return score;
         }
 
+        // --- UI HELPERS ---
         function resetGameUI() {
-            toggleGameButtons(false);
-            document.getElementById('btn-deal').style.display = 'inline-block';
-            document.getElementById('bet-amount').disabled = false;
+            document.getElementById('betting-area').style.display = 'flex'; // Show bet input again
+            document.getElementById('game-buttons').style.display = 'none'; // Hide game controls
         }
 
-        function toggleGameButtons(active) {
-            document.getElementById('btn-raise').disabled = !active;
-            document.getElementById('btn-check').disabled = !active;
-            document.getElementById('btn-fold').disabled = !active;
+        function showMessage(msg, color) {
+            const el = document.getElementById('game-message');
+            el.innerText = msg;
+            el.style.color = color;
+            el.style.borderColor = color;
+            el.style.display = 'block';
         }
 
         async function updateServerStats(bet, win) {
