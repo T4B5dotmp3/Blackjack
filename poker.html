@@ -2,204 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Play Poker</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Poker - Queen of Hearts</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="poker-body">
 
     <nav class="navbar">
-        <div class="logo">Queen of Hearts Poker</div>
+        <div class="logo">Queen of Hearts</div>
         <div class="user-controls">
-            <span class="credits-badge">Pot: $<span id="pot-display">0</span></span>
-            <span class="credits-badge">Balance: $<span id="balance-display">Loading...</span></span>
-            <button class="logout-btn" onclick="window.location.href='/dashboard'">Exit</button>
+            <div class="credits-badge">Balance: $75</div>
+            <a href="#" class="user-badge">T4B5</a>
+            <a href="index.html" class="logout-btn">Exit</a>
         </div>
     </nav>
 
-    <div class="poker-table">
-        <div id="game-message" class="message-overlay">You Win!</div>
-
-        <div class="cards-area">
-            <div class="player-section">
-                <div class="section-label">You</div>
-                <div id="player-cards" class="hand-container">
-                    <div class="card-slot card-hidden"></div>
-                    <div class="card-slot card-hidden"></div>
+    <div class="poker-table-container">
+        <div class="poker-felt">
+            
+            <div class="seat seat-top">
+                <div class="seat-label">The House</div>
+                <div class="card-row">
+                    <div class="card card-back"></div>
+                    <div class="card card-back"></div>
                 </div>
             </div>
 
-            <div class="board-section" id="community-cards">
-                <div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>
-                <div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>
-                <div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>
-                <div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>
-                <div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>
+            <div class="community-area">
+                <div class="card card-back"></div>
+                <div class="card card-back"></div>
+                <div class="card card-back"></div>
+                <div class="card card-back"></div>
+                <div class="card card-back"></div>
             </div>
 
-            <div class="house-section">
-                <div class="section-label">House</div>
-                <div id="house-cards" class="hand-container">
-                    <div class="card-slot card-hidden"></div>
-                    <div class="card-slot card-hidden"></div>
+            <div class="seat seat-bottom">
+                <div class="seat-label">You</div>
+                <div class="card-row">
+                    <div class="card red">A♥</div>
+                    <div class="card black">K♠</div>
                 </div>
             </div>
-        </div>
 
-        <div class="controls-area">
-            <div class="controls-bar">
-                <span style="color: gold; font-weight: bold;">Bet: $</span>
-                <input type="number" id="bet-input" class="bet-input" value="10">
-                <button class="poker-btn btn-deal" id="btn-deal" onclick="startGame()">DEAL</button>
-                
-                <div id="game-buttons" style="display:none; gap:10px;">
-                    <button class="poker-btn btn-raise" onclick="raise()">RAISE</button>
-                    <button class="poker-btn btn-check" onclick="nextStage()">CHECK</button>
-                    <button class="poker-btn btn-fold" onclick="fold()">FOLD</button>
-                </div>
+            <div class="poker-controls">
+                <button class="pk-btn btn-raise">RAISE</button>
+                <button class="pk-btn btn-call">CALL</button>
+                <button class="pk-btn btn-fold">FOLD</button>
             </div>
+
         </div>
     </div>
 
-    <script>
-        const suits = ['♥', '♦', '♣', '♠'];
-        const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-        let deck = [], playerHand = [], houseHand = [], community = [], stage = 0, pot = 0;
-        let initialBet = 0;
-        const user = localStorage.getItem('username') || 'Guest';
-
-        fetchBalance();
-        async function fetchBalance() {
-            if(user==='Guest')return;
-            try{
-                const r = await fetch('/my-stats',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user})});
-                const d = await r.json();
-                if(d.success) { document.getElementById('balance-display').innerText = d.credits; }
-            }catch(e){}
-        }
-
-        function createDeck() {
-            deck = [];
-            for(let s of suits) for(let r of ranks) deck.push({rank:r, suit:s, color: (s==='♥'||s==='♦')?'card-red':'card-black'});
-            deck.sort(() => Math.random() - 0.5);
-        }
-        function draw() { return deck.pop(); }
-
-        function startGame() {
-            const bet = parseInt(document.getElementById('bet-input').value);
-            const bal = parseInt(document.getElementById('balance-display').innerText);
-            if(bal < bet) return alert("Insufficient funds");
-            
-            initialBet = bet;
-            pot = bet * 2;
-            updateServerStats(bet, 0);
-
-            createDeck();
-            playerHand = [draw(), draw()];
-            houseHand = [draw(), draw()];
-            community = [];
-            stage = 0;
-
-            document.getElementById('game-message').style.display = 'none';
-            document.getElementById('btn-deal').style.display = 'none';
-            document.getElementById('game-buttons').style.display = 'flex';
-            
-            // Set House cards to hidden initially
-            document.getElementById('house-cards').innerHTML = `<div class="card-slot card-hidden"></div><div class="card-slot card-hidden"></div>`;
-            
-            renderTable();
-        }
-
-        function nextStage() {
-            if(stage===0) community.push(draw(), draw(), draw());
-            else if(stage===1 || stage===2) community.push(draw());
-            else return endGame();
-            stage++;
-            renderTable();
-        }
-
-        function raise() {
-            const bet = parseInt(document.getElementById('bet-input').value);
-            const bal = parseInt(document.getElementById('balance-display').innerText);
-            if(bal < bet) return alert("Cannot raise");
-            pot += (bet * 2);
-            updateServerStats(bet, 0);
-            nextStage();
-        }
-
-        function fold() { endGame("folded"); }
-
-        function endGame(reason) {
-            if(reason === "folded") {
-                document.getElementById('game-message').innerText = "You Folded";
-                document.getElementById('game-message').style.display = 'block';
-                resetUI();
-                return;
-            }
-
-            // --- FIX: EXPLICITLY REVEAL HOUSE CARDS ---
-            const hDiv = document.getElementById('house-cards');
-            hDiv.innerHTML = ''; // Clear the hidden cards
-            houseHand.forEach(c => {
-                // Manually create the HTML to ensure visibility
-                hDiv.innerHTML += `<div class="card-slot ${c.color}"><div>${c.rank}</div><div class="card-center-suit">${c.suit}</div><div style="transform: rotate(180deg); text-align: right;">${c.rank}</div></div>`;
-            });
-
-            // EVALUATE
-            const pScore = evaluateHand([...playerHand, ...community]);
-            const hScore = evaluateHand([...houseHand, ...community]);
-
-            let msg = "", win = 0;
-            if(pScore > hScore) { msg = `You Win $${pot}!`; win = pot; }
-            else if(hScore > pScore) { msg = "House Wins"; }
-            else { msg = "Split Pot"; win = pot/2; }
-
-            document.getElementById('game-message').innerText = msg;
-            document.getElementById('game-message').style.display = 'block';
-            if(win > 0) updateServerStats(0, win);
-            
-            resetUI();
-        }
-
-        function evaluateHand(cards) {
-            let vals = cards.map(c => ranks.indexOf(c.rank)).sort((a,b)=>b-a);
-            let score = 0;
-            for(let i=0; i<Math.min(5, vals.length); i++) score += vals[i] * Math.pow(15, 4-i);
-            
-            const counts = {};
-            const suitsC = {};
-            cards.forEach(c => { counts[c.rank]=(counts[c.rank]||0)+1; suitsC[c.suit]=(suitsC[c.suit]||0)+1; });
-            
-            for(let r in counts) {
-                if(counts[r]===2) score += 1e6 + (ranks.indexOf(r)*1e4);
-                if(counts[r]===3) score += 5e6;
-                if(counts[r]===4) score += 2e7;
-            }
-            for(let s in suitsC) if(suitsC[s]>=5) score += 1e7;
-            return score;
-        }
-
-        function resetUI() {
-            document.getElementById('btn-deal').style.display = 'block';
-            document.getElementById('game-buttons').style.display = 'none';
-        }
-
-        function renderTable() {
-            const pDiv = document.getElementById('player-cards');
-            pDiv.innerHTML = playerHand.map(c => `<div class="card-slot ${c.color}"><div>${c.rank}</div><div class="card-center-suit">${c.suit}</div><div style="transform: rotate(180deg); text-align: right;">${c.rank}</div></div>`).join('');
-            
-            const cDiv = document.getElementById('community-cards');
-            cDiv.innerHTML = community.map(c => `<div class="card-slot ${c.color}"><div>${c.rank}</div><div class="card-center-suit">${c.suit}</div><div style="transform: rotate(180deg); text-align: right;">${c.rank}</div></div>`).join('');
-            
-            // Fill empty slots
-            for(let i=0; i < (5-community.length); i++) {
-                cDiv.innerHTML += `<div class="card-slot" style="opacity:0.2; border: 2px dashed #aaa;"></div>`;
-            }
-        }
-
-        async function updateServerStats(bet, win) {
-            await fetch('/game-result', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user, betAmount:bet, winAmount:win})});
-            fetchBalance();
-        }
-    </script>
 </body>
 </html>

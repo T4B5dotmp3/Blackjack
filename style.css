@@ -5,92 +5,13 @@ body {
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #222;
+    color: white;
 }
 
 /* =========================================
-   2. LOGIN & REGISTER PAGES (Purple Theme)
+   2. NAVBAR (Shared)
    ========================================= */
-body.login-body {
-    background-color: #020024;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.container {
-    background-color: #2b005e;
-    padding: 40px;
-    border-radius: 40px;
-    width: 300px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.container h1 {
-    color: white;
-    margin-top: 0;
-    font-weight: normal;
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-input {
-    width: 100%;
-    padding: 15px;
-    border-radius: 8px;
-    border: none;
-    background-color: #e0e0e0;
-    font-size: 1rem;
-    box-sizing: border-box;
-    outline: none;
-}
-
-button {
-    margin-top: 10px;
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    background-color: #4a008f;
-    color: white;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-button:hover {
-    background-color: #5e00b3;
-}
-
-.footer-text {
-    color: white;
-    margin-top: 10px;
-}
-
-.footer-text a {
-    color: white;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-/* =========================================
-   3. DASHBOARD & NAVBAR (Dark Theme)
-   ========================================= */
-body.dashboard-body {
-    background-color: #333333;
-    color: white;
-}
-
-/* --- HEADER ALIGNMENT --- */
 .navbar {
     background-color: black;
     padding: 10px 30px;
@@ -112,12 +33,9 @@ body.dashboard-body {
     display: flex;
     align-items: center;
     gap: 15px;
-    height: 100%;
 }
 
-.credits-badge, 
-.user-badge, 
-.logout-btn {
+.credits-badge, .user-badge, .logout-btn {
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -126,394 +44,155 @@ body.dashboard-body {
     border-radius: 6px;
     font-size: 1rem;
     font-weight: bold;
-    font-family: sans-serif;
-    border: none;
-    cursor: pointer;
+    text-decoration: none;
     box-sizing: border-box;
-    line-height: 1;
 }
 
 .credits-badge {
     background-color: #ffd700;
     color: black;
     border: 1px solid #d4af37;
-    cursor: default; 
 }
 
 .user-badge {
     background-color: #8b0000;
     color: white;
-    text-decoration: none;
 }
 
 .logout-btn {
     background-color: #f0f0f0;
     color: black;
-}
-
-.user-badge:hover, .logout-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-}
-
-/* --- DASHBOARD CARDS --- */
-.game-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 40px;
-    height: 70vh;
-}
-
-.card {
-    background-color: #8b0000;
-    width: 200px;
-    padding: 20px;
-    border-radius: 15px;
-    text-align: center;
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-    transition: transform 0.2s;
-    color: white;
 }
 
-.card:hover {
-    transform: scale(1.05);
-    background-color: #a30000;
-}
-
-.footer {
-    background-color: black;
-    text-align: center;
-    padding: 15px;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    color: white;
-}
+.logout-btn:hover { background-color: #ccc; }
 
 /* =========================================
-   4. BUY CREDITS & PAYMENT
-   ========================================= */
-.container-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 50px;
-}
-
-.bundle-title-card {
-    background-color: #8b0000;
-    color: white;
-    padding: 20px 40px;
-    border-radius: 15px;
-    margin-bottom: 40px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-}
-
-.bundle-container {
-    display: flex;
-    gap: 30px;
-}
-
-.bundle-card {
-    background-color: #a33333;
-    color: black;
-    width: 180px;
-    height: 220px;
-    border-radius: 20px;
-    text-align: center;
-    padding: 20px;
-    cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-    transition: transform 0.2s;
-    font-weight: bold;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.bundle-card:hover {
-    transform: scale(1.05);
-    background-color: #c44444;
-}
-
-.arrow {
-    font-size: 2rem;
-    margin: 10px 0;
-}
-
-.payment-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 80vh;
-    gap: 50px;
-}
-
-.bundle-summary {
-    background-color: #a33333;
-    width: 250px;
-    height: 250px;
-    border-radius: 30px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: black;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-    font-weight: bold;
-}
-
-.payment-form {
-    background-color: #444;
-    padding: 40px;
-    border-radius: 30px;
-    width: 350px;
-    text-align: center;
-    color: white;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-}
-
-.payment-form input {
-    background-color: #666;
-    color: white;
-    border: none;
-    margin-bottom: 15px;
-    font-family: 'Courier New', Courier, monospace;
-}
-
-.payment-form input::placeholder {
-    color: #ccc;
-}
-
-.row {
-    display: flex;
-    gap: 10px;
-}
-
-.pay-btn {
-    background-color: #8b0000;
-    color: white;
-    width: 100%;
-    margin-top: 20px;
-    font-weight: bold;
-}
-
-.pay-btn:hover {
-    background-color: #a30000;
-}
-
-/* =========================================
-   5. POKER TABLE
+   3. POKER UI (REMASTERED)
    ========================================= */
 .poker-body {
     background-color: #333;
-    color: white;
     height: 100vh;
-    overflow: hidden;
-}
-
-.poker-table {
-    background-color: #2e5943;
-    height: 75vh;
-    margin: 20px 50px;
-    border-radius: 20px;
-    border: 5px solid #1e3b2c;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    position: relative;
-    box-shadow: inset 0 0 100px rgba(0,0,0,0.6);
-}
-
-.player-section, .house-section {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 15px;
-    width: 250px;
 }
 
-.board-section {
-    display: flex;
-    gap: 10px;
-    padding: 20px;
-    background-color: rgba(0,0,0,0.2);
-    border-radius: 15px;
-}
-
-.card-slot {
-    width: 80px;
-    height: 120px;
-    background-color: #e0e0e0;
-    border-radius: 10px;
-    border: 2px solid #333;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 5px;
-    font-weight: bold;
-    font-size: 1.4rem;
-    box-shadow: 2px 4px 6px rgba(0,0,0,0.3);
-    user-select: none;
-    color: black;
-}
-
-.card-red { color: #d00; } 
-.card-black { color: #000; }
-
-.card-hidden {
-    background-color: #777;
-    background-image: repeating-linear-gradient(45deg, #666 0, #666 10px, #777 0, #777 20px);
-    border: 2px solid #444;
-}
-
-.card-center-suit {
-    align-self: center;
-    font-size: 2.5rem;
-}
-
-.action-controls {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.poker-btn {
-    padding: 10px 20px;
-    border-radius: 5px;
-    border: none;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 1rem;
-    color: white;
-}
-
-.btn-raise { background-color: #555; }
-.btn-check { background-color: #555; }
-.btn-fold { background-color: #8b3a3a; width: 100%; margin-top: 5px; }
-.btn-deal { background-color: #ffcc00; color: black; margin-top: 10px; display: none; }
-
-.poker-btn:hover { opacity: 0.8; }
-.poker-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.section-label {
-    background-color: rgba(0,0,0,0.5);
-    padding: 5px 15px;
-    border-radius: 5px;
-    font-style: italic;
-    color: #aaa;
-}
-
-.message-overlay {
-    position: absolute;
-    top: 20%;
-    background-color: rgba(0,0,0,0.9);
-    padding: 20px 40px;
-    border-radius: 10px;
-    font-size: 2rem;
-    z-index: 10;
-    display: none;
-    border: 2px solid gold;
-    color: gold;
-    text-align: center;
-}
-
-/* =========================================
-   6. ACCOUNT PAGE STYLES
-   ========================================= */
-.account-body {
-    background-color: #333;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-.account-main-content {
+.poker-table-container {
     flex-grow: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 50px;
-    padding-bottom: 50px;
+    perspective: 1000px; /* For 3D effect if needed */
 }
 
-.account-card {
-    background-color: #8b0000;
-    width: 320px;
-    height: 380px;
-    border-radius: 30px;
-    padding: 30px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+.poker-felt {
+    background: radial-gradient(ellipse at center, #2e5943 0%, #1a3326 100%);
+    width: 80%;
+    height: 70%;
+    border-radius: 200px; /* Oval Shape */
+    border: 15px solid #3e2723; /* Wood trim */
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 100px rgba(0,0,0,0.5);
+    position: relative;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    padding: 40px;
+}
+
+/* Community Cards (Center) */
+.community-area {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    border: 2px solid rgba(255,215,0,0.3);
+    border-radius: 15px;
+    background-color: rgba(0,0,0,0.2);
+}
+
+/* Player Areas */
+.seat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: absolute;
+}
+
+.seat-top { top: -20px; left: 50%; transform: translateX(-50%); } /* Dealer/House */
+.seat-bottom { bottom: -20px; left: 50%; transform: translateX(-50%); } /* Player */
+
+.seat-label {
+    background-color: #111;
+    color: #DAA520;
+    padding: 5px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    border: 1px solid #DAA520;
+    z-index: 2;
+}
+
+.card-row {
+    display: flex;
+    gap: 10px;
+}
+
+/* Shared Card Styles */
+.card {
+    width: 70px;
+    height: 100px;
+    background-color: white;
+    border-radius: 8px;
+    display: flex;
     justify-content: center;
     align-items: center;
-    transition: transform 0.2s;
-}
-
-.account-card:hover {
-    transform: scale(1.02);
-}
-
-.account-card h2 {
-    margin-bottom: 10px;
-    font-size: 2rem;
-    margin-top: 0;
-}
-
-.account-card p {
-    color: #e0e0e0;
-    margin-bottom: 20px;
-    font-style: italic;
-}
-
-.stat-big {
-    font-size: 3.5rem;
     font-weight: bold;
-    margin: 20px 0;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    font-size: 1.2rem;
+    color: black;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+    position: relative;
 }
 
-.withdraw-input {
-    width: 70%;
-    padding: 12px;
-    border-radius: 8px;
+.card.red { color: #d00; }
+.card.black { color: #000; }
+
+.card-back {
+    background-color: #5d6bc0;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 20px);
+    border: 2px solid white;
+}
+
+/* Poker Controls */
+.poker-controls {
+    position: absolute;
+    bottom: 30px;
+    right: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pk-btn {
+    padding: 10px 20px;
     border: none;
-    margin: 20px 0;
-    text-align: center;
-    font-size: 1.1rem;
+    border-radius: 5px;
     font-weight: bold;
-}
-
-.action-btn {
-    background-color: white;
-    color: #8b0000;
-    font-weight: bold;
-    padding: 12px 30px;
-    border: none;
-    border-radius: 8px;
     cursor: pointer;
-    font-size: 1rem;
-    transition: background 0.3s;
-    margin-top: 10px;
+    color: white;
 }
+.btn-fold { background-color: #d9534f; }
+.btn-call { background-color: #5bc0de; }
+.btn-raise { background-color: #5cb85c; }
 
-.action-btn:hover {
-    background-color: #f0f0f0;
-}
 
 /* =========================================
-   7. BLACKJACK STYLES (NEW - SCREENSHOT MATCH)
+   4. BLACKJACK SPECIFIC
    ========================================= */
-
 .blackjack-body {
-    background-color: #2e5943; /* Full green background */
-    color: white;
+    background-color: #2e5943;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -522,126 +201,93 @@ body.dashboard-body {
 .bj-container {
     display: flex;
     justify-content: space-around;
-    align-items: flex-start;
-    padding-top: 80px; /* Space from navbar */
+    align-items: center;
     flex-grow: 1;
+    padding-bottom: 50px;
 }
 
-/* 3 Column Layout */
-.bj-column, .bj-center-column {
+.bj-column {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-/* Left & Right Columns (Hands) */
 .bj-label {
-    background-color: #333; /* Dark Gray box */
-    color: #111;
-    font-weight: bold;
-    font-style: italic;
-    padding: 15px 40px;
-    border-radius: 10px;
-    font-size: 1.5rem;
-    margin-bottom: 30px;
-    text-shadow: 0px 1px 0px rgba(255,255,255,0.2);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-}
-
-.bj-card-area {
-    display: flex;
-    gap: 15px;
-}
-
-.bj-card-slot {
-    width: 100px;
-    height: 140px;
-    background-color: white;
-    border: 2px solid black;
-    border-radius: 12px;
-    box-shadow: 2px 4px 10px rgba(0,0,0,0.4);
-}
-
-/* Center Column (Rules & Controls) */
-.rules-box {
-    border: 2px solid #DAA520; /* Gold Border */
-    padding: 20px;
-    width: 250px;
-    text-align: center;
-    margin-bottom: 30px;
-    color: #DAA520; /* Gold text */
-    font-weight: bold;
-    font-size: 1.1rem;
-    line-height: 1.6;
-}
-
-.bj-action-row {
-    display: flex;
-    gap: 15px;
+    background-color: #222;
+    padding: 10px 30px;
+    border-radius: 8px;
     margin-bottom: 20px;
+    font-weight: bold;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.bj-hand {
+    display: flex;
+    gap: 15px;
+    min-height: 140px; /* Keep height stable even if empty */
+}
+
+/* Center Rules */
+.bj-center {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.rules-box {
+    border: 2px solid #DAA520;
+    padding: 15px;
+    color: #DAA520;
+    width: 200px;
+}
+
+/* Controls */
+.bj-controls {
+    background-color: black;
+    padding: 20px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.bj-btn-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
 }
 
 .bj-btn {
-    padding: 10px 25px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
     font-weight: bold;
-    color: white;
     cursor: pointer;
-    font-size: 1rem;
+    color: white;
     text-transform: uppercase;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
 }
+.btn-hit { background-color: #5bc0de; }
+.btn-stand { background-color: #d9534f; }
+.btn-deal { background-color: #5cb85c; width: 100%; font-size: 1.1rem; }
 
-.btn-hit {
-    background-color: #5bc0de; /* Light Blue */
-}
-.btn-hit:hover { background-color: #46b8da; }
-
-.btn-stand {
-    background-color: #d9534f; /* Red */
-}
-.btn-stand:hover { background-color: #d43f3a; }
-
-.bj-bet-container {
-    background-color: black;
-    padding: 15px 25px;
-    border-radius: 15px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-}
-
-.bet-text {
-    color: #DAA520;
-    font-weight: bold;
-}
-
-.bj-input {
-    background-color: #222;
+.bet-input {
+    background: #333;
     border: 1px solid #DAA520;
     color: #DAA520;
-    width: 60px;
-    text-align: center;
-    font-size: 1.1rem;
     padding: 5px;
-    border-radius: 4px;
-}
-
-.btn-deal {
-    background-color: #28a745; /* Green */
-    margin-top: 0;
-}
-.btn-deal:hover { background-color: #218838; }
-
-/* Footer */
-.bj-footer {
-    background-color: black;
-    color: white;
     text-align: center;
-    padding: 15px;
-    font-size: 1rem;
-    width: 100%;
-    margin-top: auto; /* Pushes to bottom */
+    width: 80px;
+    font-weight: bold;
+}
+
+.hidden { display: none !important; }
+
+.bj-footer {
+    text-align: center;
+    padding: 10px;
+    background-color: black;
+    font-size: 0.8rem;
 }
