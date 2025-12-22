@@ -2,65 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Blackjack - Queen of Hearts</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Blackjack</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="blackjack-body">
 
     <nav class="navbar">
-        <div class="logo">Queen of Hearts</div>
+        <div class="logo">Queen of Hearts Casino</div>
         <div class="user-controls">
-            <div class="credits-badge">Balance: $<span id="balance">75</span></div>
-            <a href="#" class="user-badge">T4B5</a>
-            <a href="index.html" class="logout-btn">Exit</a>
+            <div class="badge-gold">Balance: $<span id="balance">75</span></div>
+            <a href="account.html" class="badge-red">T4B5</a>
+            <a href="login.html" class="btn-exit">Exit</a>
         </div>
     </nav>
 
-    <div class="bj-container">
-        <div class="bj-column">
-            <div class="bj-label">Your Hand <span id="player-score">(0)</span></div>
-            <div class="bj-hand" id="player-hand">
-                </div>
+    <div class="game-area">
+        
+        <div class="hand-section">
+            <div class="hand-label">Your Hand <span id="p-score"></span></div>
+            <div class="cards-container" id="player-hand">
+                <div class="card-slot"></div>
+                <div class="card-slot"></div>
+            </div>
         </div>
 
-        <div class="bj-center">
+        <div class="center-controls">
             <div class="rules-box">
                 <p>☆ Blackjack pays 3 to 2 ☆</p>
-                <p>Dealer stands on 17</p>
+                <p>☆ Dealer must stand on 17 and draw up to 16 ☆</p>
             </div>
             
-            <div id="message-area" style="height: 30px; color: gold; font-weight: bold;"></div>
+            <div id="game-message" style="color: gold; height: 20px; font-weight: bold;"></div>
 
-            <div class="bj-controls">
-                <button id="btn-deal" class="bj-btn btn-deal">DEAL GAME</button>
-
-                <div id="game-actions" class="bj-btn-group hidden">
-                    <button id="btn-hit" class="bj-btn btn-hit">HIT</button>
-                    <button id="btn-stand" class="bj-btn btn-stand">STAND</button>
+            <div class="control-panel">
+                
+                <div id="action-buttons" class="btn-row hidden">
+                    <button class="game-btn btn-hit" id="btn-hit">HIT</button>
+                    <button class="game-btn btn-stand" id="btn-stand">STAND</button>
                 </div>
 
-                <div style="margin-top: 10px;">
-                    <span style="color:#DAA520">Bet: $</span>
-                    <input type="number" id="bet-amount" class="bet-input" value="10">
+                <div id="bet-controls">
+                    <div style="margin-bottom: 10px; color: #DAA520; font-weight: bold;">
+                        Bet: $ <input type="number" id="bet-amount" class="bet-input" value="10">
+                    </div>
+                    <button class="game-btn btn-deal" id="btn-deal">DEAL</button>
                 </div>
+
             </div>
         </div>
 
-        <div class="bj-column">
-            <div class="bj-label">The House <span id="dealer-score"></span></div>
-            <div class="bj-hand" id="dealer-hand">
-                </div>
+        <div class="hand-section">
+            <div class="hand-label">The House <span id="d-score"></span></div>
+            <div class="cards-container" id="dealer-hand">
+                <div class="card-slot"></div>
+                <div class="card-slot"></div>
+            </div>
         </div>
+
     </div>
 
-    <div class="bj-footer">Developed by T4B5</div>
+    <div class="footer">Developed by T4B5</div>
 
     <script src="script.js"></script>
-    <script>
-        // Initialize Blackjack specific logic
-        window.onload = function() {
-            setupBlackjack();
-        };
-    </script>
 </body>
 </html>

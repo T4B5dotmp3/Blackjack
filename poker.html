@@ -2,48 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Poker - Queen of Hearts</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Poker</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body class="poker-body">
 
     <nav class="navbar">
-        <div class="logo">Queen of Hearts</div>
+        <div class="logo">Queen of Hearts Casino</div>
         <div class="user-controls">
-            <div class="credits-badge">Balance: $75</div>
-            <a href="#" class="user-badge">T4B5</a>
-            <a href="index.html" class="logout-btn">Exit</a>
+            <div class="badge-gold">Balance: $75</div>
+            <a href="account.html" class="badge-red">T4B5</a>
+            <a href="login.html" class="btn-exit">Exit</a>
         </div>
     </nav>
 
-    <div class="poker-table-container">
-        <div class="poker-felt">
+    <div class="poker-view">
+        <div class="poker-table">
             
             <div class="seat seat-top">
-                <div class="seat-label">The House</div>
-                <div class="card-row">
-                    <div class="card card-back"></div>
-                    <div class="card card-back"></div>
+                <div class="seat-name">The House</div>
+                <div class="cards-container">
+                    <div class="card-slot" style="background:#5d6bc0; border: 2px solid white; width: 60px; height: 90px;"></div>
+                    <div class="card-slot" style="background:#5d6bc0; border: 2px solid white; width: 60px; height: 90px;"></div>
                 </div>
             </div>
 
-            <div class="community-area">
-                <div class="card card-back"></div>
-                <div class="card card-back"></div>
-                <div class="card card-back"></div>
-                <div class="card card-back"></div>
-                <div class="card card-back"></div>
+            <div class="community-cards">
+                <div class="card-slot" style="width: 60px; height: 90px;"></div>
+                <div class="card-slot" style="width: 60px; height: 90px;"></div>
+                <div class="card-slot" style="width: 60px; height: 90px;"></div>
+                <div class="card-slot" style="width: 60px; height: 90px;"></div>
+                <div class="card-slot" style="width: 60px; height: 90px;"></div>
             </div>
 
             <div class="seat seat-bottom">
-                <div class="seat-label">You</div>
-                <div class="card-row">
-                    <div class="card red">A♥</div>
-                    <div class="card black">K♠</div>
+                <div class="seat-name">You</div>
+                <div class="cards-container">
+                    <div class="card-slot" style="width: 60px; height: 90px; color:red;">A♥</div>
+                    <div class="card-slot" style="width: 60px; height: 90px;">K♠</div>
                 </div>
             </div>
 
-            <div class="poker-controls">
+            <div class="poker-actions">
                 <button class="pk-btn btn-raise">RAISE</button>
                 <button class="pk-btn btn-call">CALL</button>
                 <button class="pk-btn btn-fold">FOLD</button>
@@ -52,5 +52,6 @@
         </div>
     </div>
 
+    <script src="script.js"></script>
 </body>
 </html>
