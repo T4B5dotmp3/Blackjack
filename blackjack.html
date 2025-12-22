@@ -2,219 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Queen of Hearts Casino</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queen of Hearts - Blackjack</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="blackjack-body">
 
     <nav class="navbar">
         <div class="logo">Queen of Hearts Casino</div>
         <div class="user-controls">
-            <div class="balance-box">Balance: $<span id="balance-display">0</span></div>
-            <button class="account-btn" id="username-display">Account username</button>
-            <button class="logout-btn" onclick="window.location.reload()">Logout</button>
+            <div class="credits-badge">Balance: $75</div>
+            <a href="#" class="user-badge">T4B5</a>
+            <button class="logout-btn">Exit</button>
         </div>
     </nav>
 
-    <div class="game-background">
+    <div class="bj-container">
         
-        <div id="game-message" class="message-overlay">
-            <div id="msg-text">You Win!</div>
-            <br>
-            <button class="btn-deal" onclick="resetForNewRound()">OK</button>
+        <div class="bj-column">
+            <div class="bj-label">Your Hand</div>
+            <div class="bj-card-area">
+                <div class="bj-card-slot empty-slot"></div>
+                <div class="bj-card-slot empty-slot"></div>
+            </div>
         </div>
 
-        <div class="table-layout">
+        <div class="bj-center-column">
             
-            <div class="side-column">
-                <div class="hand-label">Your Hand</div>
-                <div class="cards-container" id="player-cards">
-                    <div class="card-slot"></div>
-                    <div class="card-slot"></div>
-                </div>
-                <div style="color:white; font-weight:bold; display:none;" id="player-score-display">Score: 0</div>
+            <div class="rules-box">
+                <p>☆Blackjack pays 3 to 2☆</p>
+                <p>☆Dealer must stand on 17 and draw up to 16☆</p>
             </div>
 
-            <div class="center-column">
-                
-                <div class="rules-box">
-                    ☆ Blackjack pays 3 to 2 ☆
-                    <br><br>
-                    ☆ Dealer must stand on 17 and draw up to 16 ☆
-                </div>
-
-                <div class="game-controls">
-                    <button class="btn-deal" id="btn-deal" onclick="startGame()">Deal</button>
-                    
-                    <div class="action-row">
-                        <button class="btn-hit btn-disabled" id="btn-hit" onclick="hit()" disabled>Hit</button>
-                        <button class="btn-stand btn-disabled" id="btn-stand" onclick="stand()" disabled>Stand</button>
-                    </div>
-
-                    <div class="bet-display">Bet *<span id="bet-amount">10</span>*</div>
-                    
-                    <input type="number" id="bet-input" value="10" style="display:none;">
-                </div>
-
+            <div class="bj-action-row">
+                <button class="bj-btn btn-hit">HIT</button>
+                <button class="bj-btn btn-stand">STAND</button>
             </div>
 
-            <div class="side-column">
-                <div class="hand-label">The House</div>
-                <div class="cards-container" id="house-cards">
-                    <div class="card-slot"></div>
-                    <div class="card-slot"></div>
-                </div>
-                <div style="color:white; font-weight:bold; display:none;" id="house-score-display">Score: ?</div>
+            <div class="bj-bet-container">
+                <span class="bet-text">Bet: $</span>
+                <input type="number" class="bj-input" value="10">
+                <button class="bj-btn btn-deal">DEAL</button>
             </div>
 
         </div>
+
+        <div class="bj-column">
+            <div class="bj-label">The House</div>
+            <div class="bj-card-area">
+                <div class="bj-card-slot empty-slot"></div>
+                <div class="bj-card-slot empty-slot"></div>
+            </div>
+        </div>
+
     </div>
 
-    <div class="footer">
+    <div class="bj-footer">
         Developed by T4B5
     </div>
 
-    <script>
-        const suits = ['♥', '♦', '♣', '♠'];
-        const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-        let deck = [], playerHand = [], houseHand = [];
-        let balance = 1000; // Starting Default Balance
-        let currentBet = 10;
-        let gameOver = true;
-
-        // Initialize UI
-        document.getElementById('balance-display').innerText = balance;
-        document.getElementById('bet-amount').innerText = currentBet;
-
-        function createDeck() {
-            deck = [];
-            for(let s of suits) {
-                for(let r of ranks) {
-                    let val = (['J','Q','K'].includes(r)) ? 10 : (r === 'A' ? 11 : parseInt(r));
-                    let color = (s === '♥' || s === '♦') ? 'card-red' : 'card-black';
-                    deck.push({ rank: r, suit: s, value: val, color: color });
-                }
-            }
-            deck.sort(() => Math.random() - 0.5);
-        }
-
-        function draw() { return deck.pop(); }
-
-        function startGame() {
-            if(balance < currentBet) { alert("Insufficient funds"); return; }
-            
-            gameOver = false;
-            balance -= currentBet;
-            updateBalance();
-
-            createDeck();
-            playerHand = [draw(), draw()];
-            houseHand = [draw(), draw()];
-
-            // UI Updates
-            document.getElementById('btn-deal').disabled = true;
-            document.getElementById('btn-deal').classList.add('btn-disabled');
-            
-            document.getElementById('btn-hit').disabled = false;
-            document.getElementById('btn-hit').classList.remove('btn-disabled');
-            
-            document.getElementById('btn-stand').disabled = false;
-            document.getElementById('btn-stand').classList.remove('btn-disabled');
-
-            renderTable(false); // False = Hide Dealer's 2nd card
-
-            // Immediate Blackjack Check
-            if (calculateScore(playerHand) === 21) {
-                setTimeout(() => handleResult("Blackjack! You Win!", currentBet * 2.5), 500);
-            }
-        }
-
-        function hit() {
-            if(gameOver) return;
-            playerHand.push(draw());
-            renderTable(false);
-            if(calculateScore(playerHand) > 21) {
-                handleResult("BUST! House Wins.", 0);
-            }
-        }
-
-        function stand() {
-            if(gameOver) return;
-            // Dealer Logic
-            let ds = calculateScore(houseHand);
-            while(ds < 17) {
-                houseHand.push(draw());
-                ds = calculateScore(houseHand);
-            }
-            renderTable(true); // Show Dealer Cards
-
-            const ps = calculateScore(playerHand);
-            if(ds > 21) handleResult("Dealer Busts! You Win!", currentBet * 2);
-            else if(ps > ds) handleResult("You Win!", currentBet * 2);
-            else if(ds > ps) handleResult("House Wins.", 0);
-            else handleResult("Push (Tie)", currentBet);
-        }
-
-        function handleResult(msg, payout) {
-            gameOver = true;
-            balance += payout;
-            updateBalance();
-            
-            document.getElementById('msg-text').innerText = msg;
-            document.getElementById('game-message').style.display = 'block';
-            
-            // Disable buttons
-            document.getElementById('btn-hit').classList.add('btn-disabled');
-            document.getElementById('btn-stand').classList.add('btn-disabled');
-        }
-
-        function resetForNewRound() {
-            document.getElementById('game-message').style.display = 'none';
-            document.getElementById('btn-deal').disabled = false;
-            document.getElementById('btn-deal').classList.remove('btn-disabled');
-            
-            // Clear Cards Visuals
-            const emptySlot = '<div class="card-slot"></div>';
-            document.getElementById('player-cards').innerHTML = emptySlot + emptySlot;
-            document.getElementById('house-cards').innerHTML = emptySlot + emptySlot;
-        }
-
-        function updateBalance() {
-            document.getElementById('balance-display').innerText = balance;
-        }
-
-        function calculateScore(hand) {
-            let s = 0, a = 0;
-            hand.forEach(c => { s += c.value; if(c.rank === 'A') a++; });
-            while(s > 21 && a > 0) { s -= 10; a--; }
-            return s;
-        }
-
-        function renderTable(showHouse) {
-            // Render Player
-            document.getElementById('player-cards').innerHTML = playerHand.map(createCardHTML).join('');
-            
-            // Render House
-            const hDiv = document.getElementById('house-cards');
-            hDiv.innerHTML = '';
-            houseHand.forEach((c, i) => {
-                if(i === 0 && !showHouse) {
-                    // Face down card
-                    hDiv.innerHTML += `<div class="card-slot" style="background: repeating-linear-gradient(45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px);"></div>`;
-                } else {
-                    hDiv.innerHTML += createCardHTML(c);
-                }
-            });
-        }
-
-        function createCardHTML(c) {
-            return `
-            <div class="card-slot ${c.color}">
-                <div class="rank-top">${c.rank}</div>
-                <div class="suit-center">${c.suit}</div>
-                <div class="rank-bot">${c.rank}</div>
-            </div>`;
-        }
-    </script>
 </body>
 </html>
