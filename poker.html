@@ -10,48 +10,63 @@
     <nav class="navbar">
         <div class="logo">Queen of Hearts Casino</div>
         <div class="user-controls">
-            <div class="badge-gold">Balance: $75</div>
-            <a href="account.html" class="badge-red">T4B5</a>
-            <a href="login.html" class="btn-exit">Exit</a>
+            <div class="badge-gold">Balance: $<span id="balance">Loading...</span></div>
+            <a href="account.html" class="badge-red" id="username-badge">Player</a>
+            <a href="/dashboard" class="btn-exit">Exit</a>
         </div>
     </nav>
 
     <div class="poker-view">
         <div class="poker-table">
             
+            <div id="game-message" style="position:absolute; top: 40%; width:100%; text-align:center; color:gold; font-size:1.5rem; font-weight:bold; z-index:10; text-shadow: 2px 2px 0 #000;"></div>
+
             <div class="seat seat-top">
                 <div class="seat-name">The House</div>
-                <div class="cards-container">
-                    <div class="card-slot" style="background:#5d6bc0; border: 2px solid white; width: 60px; height: 90px;"></div>
-                    <div class="card-slot" style="background:#5d6bc0; border: 2px solid white; width: 60px; height: 90px;"></div>
+                <div class="cards-container" id="pk-house-cards">
+                    <div class="card-slot" style="background:#5d6bc0; border: 2px solid white;"></div>
+                    <div class="card-slot" style="background:#5d6bc0; border: 2px solid white;"></div>
                 </div>
             </div>
 
-            <div class="community-cards">
-                <div class="card-slot" style="width: 60px; height: 90px;"></div>
-                <div class="card-slot" style="width: 60px; height: 90px;"></div>
-                <div class="card-slot" style="width: 60px; height: 90px;"></div>
-                <div class="card-slot" style="width: 60px; height: 90px;"></div>
-                <div class="card-slot" style="width: 60px; height: 90px;"></div>
+            <div class="community-cards" id="pk-community">
+                <div class="card-slot" style="opacity:0.5"></div>
+                <div class="card-slot" style="opacity:0.5"></div>
+                <div class="card-slot" style="opacity:0.5"></div>
             </div>
 
             <div class="seat seat-bottom">
                 <div class="seat-name">You</div>
-                <div class="cards-container">
-                    <div class="card-slot" style="width: 60px; height: 90px; color:red;">A♥</div>
-                    <div class="card-slot" style="width: 60px; height: 90px;">K♠</div>
+                <div class="cards-container" id="pk-player-cards">
+                    <div class="card-slot" style="border: 2px dashed #555;"></div>
+                    <div class="card-slot" style="border: 2px dashed #555;"></div>
                 </div>
             </div>
 
-            <div class="poker-actions">
-                <button class="pk-btn btn-raise">RAISE</button>
-                <button class="pk-btn btn-call">CALL</button>
-                <button class="pk-btn btn-fold">FOLD</button>
+            <div class="poker-actions-container">
+                
+                <div id="pk-start-controls">
+                    <input type="number" id="pk-bet-amount" class="bet-input" value="10">
+                    <button class="pk-btn btn-deal" id="pk-btn-deal">DEAL</button>
+                </div>
+
+                <div class="poker-actions hidden" id="poker-actions">
+                    <button class="pk-btn btn-raise">RAISE (2x)</button>
+                    <button class="pk-btn btn-call">CALL</button>
+                    <button class="pk-btn btn-fold">FOLD</button>
+                </div>
             </div>
 
         </div>
     </div>
 
     <script src="script.js"></script>
+    <script>
+        // Load Balance on page load
+        const storedBal = localStorage.getItem('credits');
+        const storedUser = localStorage.getItem('username');
+        if(storedBal) document.getElementById('balance').innerText = storedBal;
+        if(storedUser) document.getElementById('username-badge').innerText = storedUser;
+    </script>
 </body>
 </html>

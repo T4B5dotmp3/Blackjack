@@ -10,9 +10,9 @@
     <nav class="navbar">
         <div class="logo">Queen of Hearts Casino</div>
         <div class="user-controls">
-            <div class="badge-gold">Balance: $<span id="balance">75</span></div>
-            <a href="account.html" class="badge-red">T4B5</a>
-            <a href="login.html" class="btn-exit">Exit</a>
+            <div class="badge-gold">Balance: $<span id="balance">Loading...</span></div>
+            <a href="account.html" class="badge-red" id="username-badge">Player</a>
+            <a href="/dashboard" class="btn-exit">Exit</a>
         </div>
     </nav>
 
@@ -29,10 +29,10 @@
         <div class="center-controls">
             <div class="rules-box">
                 <p>☆ Blackjack pays 3 to 2 ☆</p>
-                <p>☆ Dealer must stand on 17 and draw up to 16 ☆</p>
+                <p>☆ Dealer must stand on 17 ☆</p>
             </div>
             
-            <div id="game-message" style="color: gold; height: 20px; font-weight: bold;"></div>
+            <div id="game-message" style="color: gold; height: 20px; font-weight: bold; margin-bottom:10px;"></div>
 
             <div class="control-panel">
                 
@@ -64,5 +64,11 @@
     <div class="footer">Developed by T4B5</div>
 
     <script src="script.js"></script>
+    <script>
+        const storedBal = localStorage.getItem('credits');
+        const storedUser = localStorage.getItem('username');
+        if(storedBal) document.getElementById('balance').innerText = storedBal;
+        if(storedUser) document.getElementById('username-badge').innerText = storedUser;
+    </script>
 </body>
 </html>
