@@ -12,22 +12,22 @@ body {
 }
 
 /* =========================================
-   2. NAVBAR (Shared across Dashboard/Games)
+   2. NAVBAR (Shared across all pages)
    ========================================= */
 .navbar {
     background-color: black;
     padding: 0 30px;
-    height: 70px;
+    height: 80px; /* Slightly taller to match screenshot */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #555;
+    border-bottom: none; /* Clean look, no border */
 }
 
 .logo {
-    color: #ff0000;
-    font-size: 1.5rem;
-    font-weight: bold;
+    color: #cc0000; /* Darker red logo text */
+    font-size: 1.8rem;
+    font-weight: normal; 
 }
 
 .user-controls {
@@ -36,7 +36,35 @@ body {
     gap: 15px;
 }
 
-/* Badges and Buttons */
+/* New: Dashboard "Pill" Info Boxes (Balance/Username) */
+.nav-info-box {
+    background-color: #8b0000; /* Dark Red */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-style: italic;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    cursor: default;
+}
+
+/* New: White Logout Button */
+.logout-btn {
+    background-color: #f0f0f0; /* White/Light Grey */
+    color: black;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+}
+.logout-btn:hover {
+    background-color: #ccc;
+}
+
+/* Old Badges (Kept for Blackjack/Poker pages compatibility) */
 .badge-gold {
     background-color: #ffd700;
     color: black;
@@ -67,7 +95,139 @@ body {
 .btn-exit:hover { background-color: #ccc; }
 
 /* =========================================
-   3. LOGIN PAGE SPECIFIC (.login-body)
+   3. DASHBOARD PAGE (.dashboard-body)
+   ========================================= */
+body.dashboard-body {
+    background-color: #333333; /* Dark Grey Background */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.game-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px; /* Space between cards */
+    padding: 50px;
+}
+
+/* The Red Game Cards */
+.game-card {
+    background-color: #8b0000; /* Dark Red */
+    width: 300px;
+    height: 180px;
+    border-radius: 25px; /* Large rounded corners */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.game-card:hover {
+    transform: translateY(-5px); /* Lift effect */
+    background-color: #a30000; /* Lighter red on hover */
+}
+
+.game-card h2 {
+    color: white;
+    font-size: 1.8rem;
+    margin: 0 0 10px 0;
+    font-weight: normal;
+}
+
+.game-card p {
+    color: white;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Payment Page Specifics (reuses dashboard body) */
+.payment-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    gap: 20px;
+}
+
+.bundle-summary {
+    text-align: center;
+}
+.bundle-summary h2 { color: #DAA520; font-size: 2rem; margin: 0; }
+.bundle-summary h3 { color: white; font-size: 1.5rem; margin: 5px 0; }
+
+.payment-form {
+    background-color: #444;
+    padding: 30px;
+    border-radius: 15px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.payment-form input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: none;
+}
+.payment-form .row {
+    display: flex;
+    gap: 10px;
+}
+.pay-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+/* Buy Credits Page (Bundle Cards) */
+.container-center {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+}
+.bundle-title-card h2 { color: #DAA520; font-size: 2.5rem; }
+
+.bundle-container {
+    display: flex;
+    gap: 30px;
+    margin-top: 30px;
+}
+.bundle-card {
+    background-color: #222;
+    border: 2px solid #DAA520;
+    border-radius: 15px;
+    padding: 20px;
+    width: 200px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.bundle-card:hover { transform: scale(1.05); background-color: #333; }
+.bundle-card h3 { color: #DAA520; margin-top: 0; }
+.credit-amount { font-size: 1.2rem; font-weight: bold; margin: 10px 0; }
+.arrow { font-size: 1.5rem; color: #aaa; margin: 5px 0; }
+.cost { font-size: 1.2rem; color: #4caf50; font-weight: bold; }
+
+/* =========================================
+   4. LOGIN PAGE SPECIFIC (.login-body)
    ========================================= */
 body.login-body {
     background: radial-gradient(circle, #2b005e 0%, #020024 100%);
@@ -90,7 +250,12 @@ body.login-body {
 
 .login-card h1 { margin-top: 0; font-weight: normal; }
 
-.login-input {
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.login-input, .input-group input {
     width: 100%;
     padding: 12px;
     margin: 10px 0;
@@ -99,7 +264,7 @@ body.login-body {
     background: #e0e0e0;
 }
 
-.btn-login {
+.btn-login, .input-group button {
     width: 100%;
     padding: 12px;
     background-color: #4a008f;
@@ -110,10 +275,10 @@ body.login-body {
     cursor: pointer;
     margin-top: 10px;
 }
-.btn-login:hover { background-color: #6a00ff; }
+.btn-login:hover, .input-group button:hover { background-color: #6a00ff; }
 
 /* =========================================
-   4. BLACKJACK SPECIFIC (.blackjack-body)
+   5. BLACKJACK SPECIFIC (.blackjack-body)
    ========================================= */
 body.blackjack-body {
     background-color: #2e5943;
@@ -127,7 +292,7 @@ body.blackjack-body {
     flex-grow: 1;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Aligns items to top so footer pushes down */
+    align-items: flex-start; 
     padding-top: 60px;
     gap: 50px;
 }
@@ -232,17 +397,8 @@ body.blackjack-body {
 
 .hidden { display: none !important; }
 
-.footer {
-    text-align: center;
-    padding: 15px;
-    background-color: black;
-    color: white;
-    font-size: 0.9rem;
-    margin-top: auto;
-}
-
 /* =========================================
-   5. POKER SPECIFIC (.poker-body)
+   6. POKER SPECIFIC (.poker-body)
    ========================================= */
 body.poker-body {
     background-color: #333;
@@ -323,3 +479,15 @@ body.poker-body {
 .btn-fold { background-color: #d9534f; }
 .btn-call { background-color: #5bc0de; }
 .btn-raise { background-color: #5cb85c; }
+
+/* =========================================
+   7. FOOTER (Shared)
+   ========================================= */
+.footer {
+    text-align: center;
+    padding: 15px;
+    background-color: black;
+    color: white;
+    font-size: 0.9rem;
+    margin-top: auto;
+}

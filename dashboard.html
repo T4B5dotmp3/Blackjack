@@ -9,31 +9,34 @@
 
     <nav class="navbar">
         <div class="logo">Queen of Hearts Casino</div>
+        
         <div class="user-controls">
-            <span class="credits-badge">Balance: $<span id="credits-display">Loading...</span></span>
+            <div class="nav-info-box">
+                Account balance : $<span id="credits-display">...</span>
+            </div>
             
-            <button id="username-btn" class="user-badge" onclick="window.location.href='/account'">
+            <div class="nav-info-box" id="username-display" onclick="window.location.href='/account'" style="cursor: pointer;">
                 Guest
-            </button>
+            </div>
             
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </nav>
 
     <div class="game-container">
-        <div class="card" onclick="window.location.href='/buy-credits'">
-            <h2>Buy Credits!</h2>
-            <p style="color: #ddd; font-size: 0.9rem;">Top up your balance</p>
+        <div class="game-card" onclick="window.location.href='/buy-credits'">
+            <h2>Add credits!</h2>
+            <p>Top up your balance</p>
         </div>
 
-        <div class="card" onclick="window.location.href='/poker'">
-            <h2>Play Poker</h2>
-            <p style="color: #ddd; font-size: 0.9rem;">Texas Hold'em</p>
+        <div class="game-card" onclick="window.location.href='/poker'">
+            <h2>Play Poker!</h2>
+            <p>Win with your hand</p>
         </div>
 
-        <div class="card" onclick="window.location.href='/blackjack'">
-            <h2>Play Blackjack</h2>
-            <p style="color: #ddd; font-size: 0.9rem;">Beat the dealer</p>
+        <div class="game-card" onclick="window.location.href='/blackjack'">
+            <h2>Play Blackjack!</h2>
+            <p>Beat the dealer</p>
         </div>
     </div>
 
@@ -44,11 +47,10 @@
 
         // 1. Set Username Immediately
         if (username) {
-            document.getElementById('username-btn').innerText = username;
+            document.getElementById('username-display').innerText = username;
         }
 
         // 2. FETCH REAL BALANCE FROM SERVER
-        // This fixes the issue where balance doesn't update after a game
         async function fetchUserBalance() {
             if (!username) return;
 
@@ -62,14 +64,11 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Update the Screen
                     document.getElementById('credits-display').innerText = data.credits;
-                    // Update Local Storage for other pages to use
                     localStorage.setItem('credits', data.credits);
                 }
             } catch (err) {
                 console.error("Failed to fetch balance", err);
-                // Fallback to local storage if server fails
                 document.getElementById('credits-display').innerText = localStorage.getItem('credits') || 0;
             }
         }
@@ -79,14 +78,9 @@
             window.location.href = '/login'; 
         }
 
-        // Run immediately when page loads
         fetchUserBalance();
-        
-        // Run again if the user comes back to this tab
         window.onpageshow = function(event) {
-            if (event.persisted) {
-                fetchUserBalance();
-            }
+            if (event.persisted) fetchUserBalance();
         };
     </script>
 </body>
